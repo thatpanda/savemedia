@@ -178,7 +178,7 @@ namespace SaveMedia
             return true;
         }
 
-        public static String SaveFile( String aFilename, String aFilter )
+        public static String FilenameCheck( String aFilename )
         {
             aFilename = aFilename.Replace( "\\", "" );
             aFilename = aFilename.Replace( "/", "" );
@@ -189,6 +189,18 @@ namespace SaveMedia
             aFilename = aFilename.Replace( "<", "" );
             aFilename = aFilename.Replace( ">", "" );
             aFilename = aFilename.Replace( "|", "" );
+
+            if( String.IsNullOrEmpty( aFilename ) )
+            {
+                return "default";
+            }
+
+            return aFilename;
+        }
+
+        public static String SaveFile( String aFilename, String aFilter )
+        {
+            aFilename = FilenameCheck( aFilename );
 
             SaveFileDialog theSaveFileDialog = new SaveFileDialog();
             theSaveFileDialog.AddExtension = true;

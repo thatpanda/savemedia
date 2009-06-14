@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace SaveMedia
@@ -32,6 +33,10 @@ namespace SaveMedia
 
         private double  mDuration;
         private int     mPercentage;
+
+        private bool    mSilentMode;
+        private bool    mIsReadyForNextOuery;
+        private String  mPlaylistDestination;
 
         delegate void ChangeLayoutCallBack( String aPhase );
         delegate void NotifyUserCallBack();
@@ -84,6 +89,9 @@ namespace SaveMedia
             mThumbnailClient.DownloadFileCompleted += new System.ComponentModel.AsyncCompletedEventHandler( ThumbnailDownloadCompleted );            
 
             mDuration = 0;
+            mPercentage = 0;
+            mSilentMode = false;
+            mIsReadyForNextOuery = true;
         }
 
         private void mOkButton_Click( object sender, EventArgs e )
@@ -115,7 +123,7 @@ namespace SaveMedia
 
             if( theUrl.OriginalString.StartsWith( "http://www.youtube.com" ) )
             {
-                DownloadYouTubeVideo( ref theUrl );
+                DownloadYouTubeHelper( ref theUrl );
             }
             else if( theUrl.OriginalString.StartsWith( "http://www.tudou.com" ) )
             {
@@ -185,7 +193,7 @@ namespace SaveMedia
                 if( mDuration == 0 )
                 {
                     String thePattern = "Duration: (\\d{2}):(\\d{2}):([\\d|.]+),";
-                    System.Text.RegularExpressions.Match theMatch = System.Text.RegularExpressions.Regex.Match( outLine.Data, thePattern );
+                    Match theMatch = Regex.Match( outLine.Data, thePattern );
                     if( theMatch.Success && theMatch.Groups.Count == 4 )
                     {
                         double theHours = System.Convert.ToDouble( theMatch.Groups[ 1 ].ToString() );
@@ -197,7 +205,7 @@ namespace SaveMedia
                 else
                 {
                     String thePattern = "time=([\\d|.]+) ";
-                    System.Text.RegularExpressions.Match theMatch = System.Text.RegularExpressions.Regex.Match( outLine.Data, thePattern );
+                    Match theMatch = Regex.Match( outLine.Data, thePattern );
                     if( theMatch.Success && theMatch.Groups.Count == 2 )
                     {
                         double theProgress = System.Convert.ToDouble( theMatch.Groups[ 1 ].ToString() );
@@ -211,6 +219,121 @@ namespace SaveMedia
                     }
                 }
             }
+        }
+
+        private void DownloadYouTubeHelper( ref Uri aUrl )
+        {
+            if( aUrl.OriginalString.StartsWith( "http://www.youtube.com/view_play_list?" ) )
+            {
+                int thePageNumber = 1;
+                DownloadYouTubePlaylist( ref aUrl, thePageNumber );
+            }
+            else
+            {
+                DownloadYouTubeVideo( ref aUrl );
+            }
+        }
+
+        private void DownloadYouTubePlaylist( ref Uri aUrl, int aPageNumber )
+        {
+            ShowStatus( "Connecting to " + aUrl.Host );
+
+            System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( aUrl.Query );
+            String thePlaylistId = theQueryStrings[ "p" ];
+            String thePageNumber = theQueryStrings[ "page" ];
+
+            if( String.IsNullOrEmpty( thePageNumber ) )
+            {
+                thePageNumber = "1";
+            }
+
+            if( aPageNumber == 1 &&
+                !thePageNumber.Equals( aPageNumber.ToString() ) )
+            {
+                Uri theFirstPage = new Uri( "http://www.youtube.com/view_play_list?p=" + thePlaylistId );
+                DownloadYouTubePlaylist( ref theFirstPage, 1 );
+                return;
+            }
+
+            String theSourceCode;
+            if( !Utilities.DownloadString( aUrl, out theSourceCode ) )
+            {
+                ShowStatus( "Failed to connect to " + aUrl.Host );
+                InputEnabled( true );
+                return;
+            }
+
+            String thePlaylistTitle;
+            if( !Utilities.StringBetween( theSourceCode, "<h1>", "</h1>", out thePlaylistTitle ) )
+            {
+                ShowStatus( "Failed to analyze playlist" );
+                InputEnabled( true );
+                return;
+            }
+
+            String theUrlPattern = "<div\\s+class=\"video-short-title\"\\s*>.*\n.+\n.+href=\"(.*)\"\\s+title";
+            Match theUrlMatch = Regex.Match( theSourceCode, theUrlPattern );
+
+            if( !theUrlMatch.Success )
+            {
+                ShowStatus( "Failed to analyze playlist" );
+                InputEnabled( true );
+                return;
+            }
+
+            if( !mSilentMode )
+            {
+                FolderBrowserDialog theDialog = new FolderBrowserDialog();
+                theDialog.Description = "Please select the destination for videos from:\n\n" + thePlaylistTitle;
+                if( theDialog.ShowDialog() != DialogResult.OK )
+                {
+                    ChangeLayout( "Cancel clicked" );
+                    ClearTemporaryFiles();
+                    return;
+                }
+                mPlaylistDestination = theDialog.SelectedPath;
+            }
+
+            mSilentMode = true;            
+
+            while( theUrlMatch.Success )
+            {
+                String thePartialUrl = theUrlMatch.Groups[ 1 ].ToString();
+                Uri theVideoUrl = new Uri( "http://" + aUrl.Host + thePartialUrl );
+
+                mIsReadyForNextOuery = false;
+                DownloadYouTubeVideo( ref theVideoUrl );
+
+                while( !mIsReadyForNextOuery )
+                {
+                    System.Windows.Forms.Application.DoEvents();
+                }
+
+                if( !mSilentMode )
+                {
+                    return;
+                }
+
+                theUrlMatch = theUrlMatch.NextMatch();
+            }
+
+            int theCurrentPageIndex = theSourceCode.IndexOf( "class=\"pagerCurrent\"" );
+            if( theCurrentPageIndex != -1 )
+            {
+                int theNextPageIndex = theSourceCode.LastIndexOf( "class=\"pagerNotCurrent\"" );
+
+                if( theNextPageIndex > theCurrentPageIndex )
+                {
+                    int theNextPageNumber = Convert.ToInt32( thePageNumber ) + 1;
+                    Uri theNextPage = new Uri( "http://www.youtube.com/view_play_list?p=" + thePlaylistId +
+                                               "&page=" + theNextPageNumber );
+                    DownloadYouTubePlaylist( ref theNextPage, theNextPageNumber );
+                    return;
+                }
+            }
+
+            mSilentMode = false;
+            ChangeLayout( "Download completed" );
         }
 
         private void DownloadYouTubeVideo( ref Uri aUrl )
@@ -254,7 +377,16 @@ namespace SaveMedia
             DisplayMediaInfo( theVideoTitle );
 
             String theFilename = theVideoTitle;
-            String theFilePath = Utilities.SaveFile( theFilename, "Flash Video (*.flv)|*.flv" );
+            String theFilePath;
+
+            if( mSilentMode )
+            {
+                theFilePath = mPlaylistDestination + "\\" + Utilities.FilenameCheck( theVideoTitle ) + ".flv";
+            }
+            else
+            {
+                theFilePath = Utilities.SaveFile( theFilename, "Flash Video (*.flv)|*.flv" );
+            }
 
             DownloadFile( theVideoUrl, theFilePath );
         }
@@ -659,6 +791,54 @@ namespace SaveMedia
                 return;
             }
 
+            if( mSilentMode )
+            {
+                switch( aPhase )
+                {
+                    case "Cancel clicked":
+
+                        mSilentMode = false;
+                        mIsReadyForNextOuery = true;
+                        break;
+
+                    case "Converting...":
+                        break;
+
+                    case "Conversion completed":
+
+                        mIsReadyForNextOuery = true;
+                        return;
+
+                    case "Conversion failed":
+                    case "Conversion failed, plug-in not found":
+
+                        mSilentMode = false;
+                        mIsReadyForNextOuery = true;
+                        break;
+
+                    case "Downloading":
+                        break;
+
+                    case "Download completed":
+
+                        mIsReadyForNextOuery = true;
+                        return;
+
+                    case "Download cancelled":
+                    case "Download failed":
+
+                        mSilentMode = false;
+                        mIsReadyForNextOuery = true;
+                        break;
+
+                    case "OK clicked":
+
+                        mSilentMode = false;
+                        mIsReadyForNextOuery = true;
+                        break;
+                }
+            }
+
             this.SuspendLayout();
 
             switch( aPhase )
@@ -751,9 +931,8 @@ namespace SaveMedia
                     mDownloadButton.Visible = true;
                     mOkButton.Visible = false;
                     mCancelButton.Visible = false;
-
                     break;
-             
+
                 default:
 
                     throw new System.Exception( "Unknown phase" );
@@ -786,14 +965,13 @@ namespace SaveMedia
             mUrl.Enabled = aIsEnabled;
             mConversion.Enabled = aIsEnabled && System.IO.File.Exists( gcFFmpegPath );            
 
-            String theNewUrl = Utilities.ReadClipboardUrl();
-            if( !mUrl.Text.Equals( theNewUrl ) && !String.IsNullOrEmpty( theNewUrl ) )
-            {
-                mUrl.Text = Utilities.ReadClipboardUrl();
-            }
-
             if( aIsEnabled )
             {
+                String theNewUrl = Utilities.ReadClipboardUrl();
+                if( !mUrl.Text.Equals( theNewUrl ) && !String.IsNullOrEmpty( theNewUrl ) )
+                {
+                    mUrl.Text = Utilities.ReadClipboardUrl();
+                }
                 mUrl_TextChanged( this, new EventArgs() );
             }
             else
