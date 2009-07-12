@@ -12,6 +12,68 @@ namespace SaveMedia
         private static System.Net.WebClient                         mSourceCodeClient;
         private static System.Net.DownloadStringCompletedEventArgs  mSourceCodeEvent;
 
+        public static String BytesToHex( byte[] aBytes )
+        {
+            String theHexString = String.Empty;
+            foreach( byte theByte in aBytes )
+            {
+                theHexString += theByte.ToString( "X2" );
+            }
+
+            return theHexString;
+        }
+
+        public static byte[] HexToBytes( String aHex )
+        {
+            if( aHex.Length % 2 != 0 )
+            {
+                return new byte[ 0 ];
+            }
+
+            byte[] Bytes = new byte[ aHex.Length / 2 ];
+            for( int theArrayIndex = 0, theHexIndex = 0;
+                 theHexIndex <= aHex.Length - 2;
+                 theArrayIndex += 1, theHexIndex += 2 )
+            {
+                String theHexString = aHex.Substring( theHexIndex, 2 );
+                uint theDecimal = uint.Parse( theHexString, System.Globalization.NumberStyles.HexNumber );
+                char theChar = System.Convert.ToChar( theDecimal );
+                Bytes[ theArrayIndex ] = System.Convert.ToByte( theChar );
+            }
+
+            return Bytes;
+        }
+
+        public static String AsciiToHex( String aAscii )
+        {
+            String theHexString = String.Empty;
+            foreach( char theChar in aAscii )
+            {
+                uint theDecimal = System.Convert.ToUInt32( theChar );
+                theHexString += theDecimal.ToString( "X2" );
+            }
+            return theHexString;
+        }
+
+        public static String HexToAscii( String aHex )
+        {
+            if( aHex.Length % 2 != 0 )
+            {
+                return System.String.Empty;
+            }
+
+            String theAsciiString = String.Empty;
+            for( int theIndex = 0; theIndex <= aHex.Length - 2; theIndex += 2 )
+            {
+                String theHexString = aHex.Substring( theIndex, 2 );
+                uint theDecimal = uint.Parse( theHexString, System.Globalization.NumberStyles.HexNumber );
+                char theChar = System.Convert.ToChar( theDecimal );
+                theAsciiString += theChar.ToString();
+            }
+
+            return theAsciiString;
+        }
+
         [StructLayout( LayoutKind.Sequential )]
         public struct SHFILEINFO
         {
@@ -101,10 +163,10 @@ namespace SaveMedia
             {
                 mSourceCodeClient = new System.Net.WebClient();
                 //mSourceCodeClient.CachePolicy = new System.Net.Cache.RequestCachePolicy( System.Net.Cache.RequestCacheLevel.Revalidate );
-                mSourceCodeClient.Encoding = System.Text.Encoding.UTF8;                
+                mSourceCodeClient.Encoding = System.Text.Encoding.UTF8;
                 mSourceCodeClient.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
                 mSourceCodeClient.DownloadStringCompleted += new System.Net.DownloadStringCompletedEventHandler( DownloadSourceCodeCompleted );
-            }            
+            }
 
             while( mSourceCodeClient.IsBusy )
             {
@@ -136,6 +198,7 @@ namespace SaveMedia
                 else
                 {
                     aResult = mSourceCodeEvent.Result;
+                    aResult = System.Web.HttpUtility.HtmlDecode( aResult );
                     isSuccess = true;
                 }
             }
@@ -190,6 +253,11 @@ namespace SaveMedia
             aFilename = aFilename.Replace( ">", "" );
             aFilename = aFilename.Replace( "|", "" );
 
+            foreach( char theInvalidChar in System.IO.Path.GetInvalidFileNameChars() )
+            {
+                aFilename = aFilename.Replace( theInvalidChar.ToString(), "" );
+            }
+
             if( String.IsNullOrEmpty( aFilename ) )
             {
                 return "default";
@@ -198,7 +266,7 @@ namespace SaveMedia
             return aFilename;
         }
 
-        public static String SaveFile( String aFilename, String aFilter )
+        public static String SaveFile( String aFilename, String aFilter, System.Windows.Forms.Form aOwner )
         {
             aFilename = FilenameCheck( aFilename );
 
@@ -212,9 +280,10 @@ namespace SaveMedia
             theSaveFileDialog.FilterIndex = 1;
             theSaveFileDialog.OverwritePrompt = true;
             theSaveFileDialog.RestoreDirectory = true;
+            theSaveFileDialog.SupportMultiDottedExtensions = true;
             theSaveFileDialog.ValidateNames = true;
 
-            if( theSaveFileDialog.ShowDialog() == DialogResult.OK )
+            if( theSaveFileDialog.ShowDialog( aOwner ) == DialogResult.OK )
             {
                 return theSaveFileDialog.FileName;
             }

@@ -33,12 +33,17 @@ namespace SaveMedia
 
         private void theFFmpegLink_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
         {
-            System.Diagnostics.Process.Start( "http://ffmpeg.arrozcru.org/builds/" );
+            System.Diagnostics.Process.Start( "http://ffmpeg.arrozcru.org/autobuilds/" );
         }
 
         private void theNewGroundsLink_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
         {
             System.Diagnostics.Process.Start( "http://www.newgrounds.com/" );
+        }
+
+        private void theRapidShareLink_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
+        {
+            System.Diagnostics.Process.Start( "http://www.rapidshare.com/" );
         }
 
         private void theTudouLink_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
