@@ -208,7 +208,7 @@ namespace SaveMedia
             }
             else if( aUrl.OriginalString.StartsWith( "http://" ) )
             {
-                String theFilename = System.IO.Path.GetFileNameWithoutExtension( aUrl.OriginalString );
+                String theFilename = System.IO.Path.GetFileName( aUrl.OriginalString );
                 theFilename = Utilities.FilenameCheck( theFilename );
 
                 String theFileExt = System.IO.Path.GetExtension( aUrl.OriginalString );
@@ -350,6 +350,38 @@ namespace SaveMedia
 
         private void DownloadRapidShareFile( ref Uri aUrl )
         {
+            if( aUrl.Host.StartsWith( "www" ) )
+            {
+                String theSource;
+                if( !Utilities.DownloadString( aUrl, out theSource ) )
+                {
+                    ShowStatus( "Failed to connect to " + aUrl.Host );
+                    InputEnabled( true );
+                    return;
+                }
+
+                String theNextUrlStr;
+                if( !Utilities.StringBetween( theSource, "<form id=\"ff\" action=\"", "\"", out theNextUrlStr ) )
+                {
+                    ShowStatus( "Failed to analyze source code" );
+                    InputEnabled( true );
+                    return;
+                }
+
+                Uri theNextUrl;
+                if( Uri.TryCreate( theNextUrlStr, UriKind.Absolute, out theNextUrl ) )
+                {
+                    DownloadRapidShareFile( ref theNextUrl );
+                }
+                else
+                {
+                    ShowStatus( "Unknown URL" );
+                    InputEnabled( true );
+                }
+
+                return;
+            }
+
             mWaitingTime = 0;
             mDelayDownloadDestination = String.Empty;
             mDelayTimer.Stop();
@@ -379,7 +411,7 @@ namespace SaveMedia
             theResponse.Close();
 
             String theFirstMirror;
-            if( !Utilities.StringBetween( theSourceCode, "action=\"", "\"", out theFirstMirror ) )
+            if( !Utilities.StringBetween( theSourceCode, "<form name=\"dlf\" action=\"", "\"", out theFirstMirror ) )
             {
                 ShowStatus( "Failed to extract mirror's URL" );
                 InputEnabled( true );
@@ -409,7 +441,7 @@ namespace SaveMedia
             String theFilename = System.IO.Path.GetFileName( theDownloadUrl.OriginalString );
             theFilename = Utilities.FilenameCheck( theFilename );
 
-            String theFileExt = System.IO.Path.GetExtension( theFilename );
+            String theFileExt = System.IO.Path.GetExtension( theDownloadUrl.OriginalString );
             mDelayDownloadDestination = Utilities.SaveFile( theFilename, theFileExt + "|*" + theFileExt, this );
 
             if( String.IsNullOrEmpty( mDelayDownloadDestination ) )
@@ -552,21 +584,51 @@ namespace SaveMedia
                 return;
             }
 
-            String thePartialUrl;
-            if( !Utilities.StringBetween( theSourceCode, "/watch_fullscreen?", "';", out thePartialUrl ) )
+            String theVideoTitle;
+            if( !Utilities.StringBetween( theSourceCode, "<meta name=\"title\" content=\"", "\">", out theVideoTitle ) )
             {
-                ShowStatus( "Failed to analyze video's URL" );
+                ShowStatus( "Failed to extract video's title" );
                 InputEnabled( true );
                 return;
             }
-            Uri theFullScreenUrl = new Uri( "http://" + aUrl.Host + "/watch_fullscreen?" + thePartialUrl );
 
-            System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( theFullScreenUrl.Query );
+            if( !Utilities.StringBetween( theSourceCode, "var swfArgs = {", "}", out theSourceCode ) )
+            {
+                ShowStatus( "Failed to analyze source code" );
+                InputEnabled( true );
+                return;
+            }
 
-            String theVideoTitle = theQueryStrings[ "title" ];
-            String theVideoId    = theQueryStrings[ "video_id" ];
-            String theToken      = theQueryStrings[ "t" ];
-            String theFmtMap     = theQueryStrings[ "fmt_map" ];
+            String theVideoId;
+            if( !Utilities.StringBetween( theSourceCode, "\"video_id\": \"", "\"", out theVideoId ) )
+            {
+                ShowStatus( "Failed to extract video's id" );
+                InputEnabled( true );
+                return;
+            }
+
+            String theToken;
+            if( !Utilities.StringBetween( theSourceCode, "\"t\": \"", "\"", out theToken ) )
+            {
+                ShowStatus( "Failed to extract token" );
+                InputEnabled( true );
+                return;
+            }
+
+            String theFmtMap;
+            if( !Utilities.StringBetween( theSourceCode, "\"fmt_map\": \"", "\"", out theFmtMap ) )
+            {
+                ShowStatus( "Failed to extract video's fmt map" );
+                InputEnabled( true );
+                return;
+            }
+
+            //System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( theFullScreenUrl.Query );
+
+            //String theVideoTitle = theQueryStrings[ "title" ];
+            //String theVideoId    = theQueryStrings[ "video_id" ];
+            //String theToken      = theQueryStrings[ "t" ];
+            //String theFmtMap     = theQueryStrings[ "fmt_map" ];
 
             String thePreferedQuality = Settings.YouTubeQuality();
             String theQuality = Utilities.YouTubeAvailableQuality( theFmtMap, thePreferedQuality );

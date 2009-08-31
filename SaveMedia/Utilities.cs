@@ -126,6 +126,13 @@ namespace SaveMedia
                 return String.Empty;
             }
 
+            // %2F = /
+            // %2C = ,
+            if( aFmtMap.Contains( "%2F" ) || aFmtMap.Contains( "%2C" ) )
+            {
+                aFmtMap = Uri.UnescapeDataString( aFmtMap );
+            }
+
             // "fmt_map": "35/640000/9/0/115,18/512000/9/0/115,34/0/9/0/115,5/0/7/0/0"
             aFmtMap = "," + aFmtMap;
 
