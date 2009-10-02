@@ -163,6 +163,7 @@ namespace SaveMedia
             mDownloadQuery.Clear();
             mConvertQuery.Clear();
             mPlaylistDestination = String.Empty;
+            mProgressBar.Value = 0;
 
             Uri theUrl;
             bool isValid = Uri.TryCreate( mUrl.Text, UriKind.Absolute, out theUrl );
@@ -777,47 +778,31 @@ namespace SaveMedia
         {
             ShowStatus( "Connecting to " + aUrl.Host );
 
-            String theSourceCode;
-            if( !Utilities.DownloadString( aUrl, out theSourceCode ) )
-            {
-                ShowStatus( "Failed to connect to " + aUrl.Host );
-                InputEnabled( true );
-                return;
-            }
-
             String theVideoTitle;
-            if( !Utilities.StringBetween( theSourceCode, "<title>", "</title>", out theVideoTitle ) )
-            {
-                ShowStatus( "Failed to read video's title" );
-                InputEnabled( true );
-                return;
-            }
-            theVideoTitle = Uri.UnescapeDataString( theVideoTitle );
+            Uri    theVideoUrl;
+            Uri    theThumbnailUrl;
+            String theFilename;
+            String theFileExtension;
+            String theError;
 
-            String theVideoUrlString;
-            if( !Utilities.StringBetween( theSourceCode, "var fw = new FlashWriter(\"", "\"", out theVideoUrlString ) )
-            {
-                ShowStatus( "Failed to read video's URL" );
-                InputEnabled( true );
-                return;
-            }
+            Sites.NewGrounds.TryParse( aUrl,
+                out theVideoTitle,
+                out theVideoUrl,
+                out theThumbnailUrl,
+                out theFilename,
+                out theFileExtension,
+                out theError );
 
-            String theThumbnailUrlString;
-            if( !Utilities.StringBetween( theSourceCode, "<link rel=\"image_src\" href=\"", "\"", out theThumbnailUrlString ) )
+            if( !String.IsNullOrEmpty( theError ) )
             {
-                ShowStatus( "Failed to read video's thumbnail" );
+                ShowStatus( theError );
                 InputEnabled( true );
-                return;
             }
-
-            Uri theThumbnailUrl = new Uri( theThumbnailUrlString );
-            Uri theVideoUrl     = new Uri( theVideoUrlString );
 
             DownloadThumbnail( ref theThumbnailUrl );
             DisplayMediaInfo( theVideoTitle );
 
-            String theFilename = theVideoTitle;
-            String theFilePath = Utilities.SaveFile( theFilename, "Flash Movie (*.swf)|*.swf", this );
+            String theFilePath = Utilities.SaveFile( theFilename, theFileExtension, this );
 
             DownloadFile( theVideoUrl, theFilePath );
         }
@@ -826,74 +811,31 @@ namespace SaveMedia
         {
             ShowStatus( "Connecting to " + aUrl.Host );
 
-            String theSourceCode;
-            if( !Utilities.DownloadString( aUrl, out theSourceCode ) )
-            {
-                ShowStatus( "Failed to connect to " + aUrl.Host );
-                InputEnabled( true );
-                return;
-            }
-
-            String theVideoId;
-            if( !Utilities.StringBetween( theSourceCode, "http://vimeo.com/moogaloop.swf?clip_id=", "\"", out theVideoId ) )
-            {
-                ShowStatus( "Failed to read video's ID" );
-                InputEnabled( true );
-                return;
-            }
-
-            String theThumbnailUrlString;
-            if( !Utilities.StringBetween( theSourceCode, "<link rel=\"videothumbnail\" href=\"", "\"", out theThumbnailUrlString ) )
-            {
-                ShowStatus( "Failed to read video's thumbnail" );
-                InputEnabled( true );
-                return;
-            }
-
-            Uri theXmlUrl = new Uri( "http://vimeo.com/moogaloop/load/clip:" + theVideoId + "/local?param_clip_id=" + theVideoId );
-
-            String theXmlSource;
-            if( !Utilities.DownloadString( theXmlUrl, out theXmlSource ) )
-            {
-                ShowStatus( "Video is not found" );
-                InputEnabled( true );
-                return;
-            }
-
             String theVideoTitle;
-            if( !Utilities.StringBetween( theXmlSource, "<caption>", "</caption>", out theVideoTitle ) )
+            Uri    theVideoUrl;
+            Uri    theThumbnailUrl;
+            String theFilename;
+            String theFileExtension;
+            String theError;
+
+            Sites.Vimeo.TryParse( aUrl,
+                out theVideoTitle,
+                out theVideoUrl,
+                out theThumbnailUrl,
+                out theFilename,
+                out theFileExtension,
+                out theError );
+
+            if( !String.IsNullOrEmpty( theError ) )
             {
-                ShowStatus( "Failed to read video's title" );
+                ShowStatus( theError );
                 InputEnabled( true );
-                return;
             }
-
-            String theRequestSignature;
-            if( !Utilities.StringBetween( theXmlSource, "<request_signature>", "</request_signature>", out theRequestSignature ) )
-            {
-                ShowStatus( "Failed to read video's signature" );
-                InputEnabled( true );
-                return;
-            }
-
-            String theRequestSignatureExpires;
-            if( !Utilities.StringBetween( theXmlSource, "<request_signature_expires>", "</request_signature_expires>", out theRequestSignatureExpires ) )
-            {
-                ShowStatus( "Failed to read video's signature" );
-                InputEnabled( true );
-                return;
-            }
-
-            String theVideoUrlString = "http://vimeo.com/moogaloop/play/clip:" + theVideoId + "/" + theRequestSignature + "/" + theRequestSignatureExpires + "/?q=sd&type=local";
-
-            Uri theThumbnailUrl = new Uri( theThumbnailUrlString );
-            Uri theVideoUrl     = new Uri( theVideoUrlString );
 
             DownloadThumbnail( ref theThumbnailUrl );
             DisplayMediaInfo( theVideoTitle );
 
-            String theFilename = theVideoTitle;
-            String theFilePath = Utilities.SaveFile( theFilename, "Flash Video (*.flv)|*.flv", this );
+            String theFilePath = Utilities.SaveFile( theFilename, theFileExtension, this );
 
             DownloadFile( theVideoUrl, theFilePath );
         }
@@ -907,6 +849,8 @@ namespace SaveMedia
             
             ShowStatus( "Ready to download" );
             MediaInfoVisible( true );
+
+            System.Windows.Forms.Application.DoEvents();
         }
 
         private void DownloadThumbnail( ref Uri aUrl )

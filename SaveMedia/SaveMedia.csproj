@@ -124,6 +124,8 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Settings.cs" />
+    <Compile Include="Sites\NewGrounds.cs" />
+    <Compile Include="Sites\Vimeo.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
