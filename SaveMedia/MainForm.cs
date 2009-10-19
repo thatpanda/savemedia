@@ -196,6 +196,10 @@ namespace SaveMedia
             {
                 DownloadVimeoVideo( ref aUrl );
             }
+            else if( aUrl.OriginalString.StartsWith( "http://www.collegehumor.com" ) )
+            {
+                DownloadCollegeHumorVideo( ref aUrl );
+            }
             else if( aUrl.OriginalString.StartsWith( "http://link.brightcove.com" ) )
             {
                 //DownloadBrightcoveVideo( ref theUrl );
@@ -313,40 +317,6 @@ namespace SaveMedia
                     }
                 }
             }
-        }
-
-        private void DownloadBrightcoveVideo( ref Uri aUrl )
-        {
-            //http://link.brightcove.com/services/player/bcpid6555681001?bctid=24835989001
-            //http://link.brightcove.com/services/player/bcpid2517822001?bctid=2553471001
-            /*
-            Uri theAmfUrl = new Uri( "http://c.brightcove.com/services/messagebroker/amf" );
-            HttpWebRequest theRequest = (HttpWebRequest)WebRequest.Create( theAmfUrl );
-            theRequest.UserAgent = SaveMedia.Program.UserAgent;
-            theRequest.Referer = "http://admin.brightcove.com/viewer/us1.20.02.00/federated_video.swf?isVid=true&purl=" + aUrl.OriginalString;
-            theRequest.Method = "POST";
-            theRequest.ContentType = "application/x-amf";
-            theRequest.Credentials = CredentialCache.DefaultCredentials;
-
-            String thePostData = "000300000001004d636f6d2e627269676874636f76652e657870657269656e63652e457870657269656e636552756e74696d654661636164652e67657450726f6772616d6d696e67576974684f766572726964657300022f31000000c00a000000020041f86bfc0e900000110903010a810353636f6d2e627269676874636f76652e657870657269656e63652e436f6e74656e744f7665727269646519636f6e74656e7452656649641b666561747572656452656649641b636f6e74656e7452656649647317636f6e74656e745479706515636f6e74656e7449647315666561747572656449640d74617267657413636f6e74656e744964010101040001057fffffffffffffff0617766964656f506c61796572054217215c78240000";
-            //String thePostData = "000000000001003a636f6d2e627269676874636f76652e636174616c6f672e436174616c6f674661636164652e66696e64566964656f466f725075626c697368657200022f32000000270a0000000502000a323535333437313030310041d9efaa8e0000000101050041e2c25d46200000";
-            byte[] thePostBytes = Utilities.HexToBytes( thePostData );
-            theRequest.ContentLength = thePostBytes.Length;
-
-            System.IO.Stream theRequestStream = theRequest.GetRequestStream();
-            theRequestStream.Write( thePostBytes, 0, thePostBytes.Length );
-            theRequestStream.Close();
-
-            HttpWebResponse theResponse = (HttpWebResponse)theRequest.GetResponse();
-            System.IO.Stream theResponseStream = theResponse.GetResponseStream();
-            byte[] theResponseBytes = new byte[ theResponse.ContentLength ];
-            theResponseStream.Read( theResponseBytes, 0, theResponseBytes.Length );
-            theResponseStream.Close();
-            theResponse.Close();
-
-            String theHexString = Utilities.BytesToHex( theResponseBytes );
-            String theResponseString = Utilities.HexToAscii( theHexString );
-            */
         }
 
         private void DownloadRapidShareFile( ref Uri aUrl )
@@ -517,7 +487,8 @@ namespace SaveMedia
                 return;
             }
 
-            String theUrlPattern = "<div\\s+class=\"video-short-title\"\\s*>.*\n.+\n.+href=\"(.*)\"\\s+title";
+            // http://msdn.microsoft.com/en-us/library/az24scfc.aspx
+            String theUrlPattern = "<div\\s+class=\"video-short-title\"\\s*>(\\s|\n)+<a\\s.*href=\"([^\"]+)\"";
             Match theUrlMatch = Regex.Match( theSourceCode, theUrlPattern );
 
             if( !theUrlMatch.Success )
@@ -542,7 +513,7 @@ namespace SaveMedia
 
             while( theUrlMatch.Success )
             {
-                String thePartialUrl = theUrlMatch.Groups[ 1 ].ToString();
+                String thePartialUrl = theUrlMatch.Groups[ 2 ].ToString();
                 Uri theVideoUrl = new Uri( "http://" + aUrl.Host + thePartialUrl );
                 mDownloadQuery.Add( theVideoUrl );
 
@@ -562,6 +533,11 @@ namespace SaveMedia
                     DownloadYouTubePlaylist( ref theNextPage, theNextPageNumber );
                     return;
                 }
+                else if( mDownloadQuery.Count != 0 )
+                {
+                    Uri theFirstUrl = mDownloadQuery[ 0 ];
+                    DownloadYouTubeVideo( ref theFirstUrl );
+                }
             }
             else
             {
@@ -577,73 +553,31 @@ namespace SaveMedia
         {
             ShowStatus( "Connecting to " + aUrl.Host );
 
-            String theSourceCode;
-            if( !Utilities.DownloadString( aUrl, out theSourceCode ) )
-            {
-                ShowStatus( "Failed to connect to " + aUrl.Host );
-                InputEnabled( true );
-                return;
-            }
-
             String theVideoTitle;
-            if( !Utilities.StringBetween( theSourceCode, "<meta name=\"title\" content=\"", "\">", out theVideoTitle ) )
+            Uri    theVideoUrl;
+            Uri    theThumbnailUrl;
+            String theFilename;
+            String theFileExtension;
+            String theError;
+
+            Sites.YouTube.TryParse( aUrl,
+                out theVideoTitle,
+                out theVideoUrl,
+                out theThumbnailUrl,
+                out theFilename,
+                out theFileExtension,
+                out theError );
+
+            if( !String.IsNullOrEmpty( theError ) )
             {
-                ShowStatus( "Failed to extract video's title" );
+                ShowStatus( theError );
                 InputEnabled( true );
                 return;
             }
-
-            if( !Utilities.StringBetween( theSourceCode, "var swfArgs = {", "}", out theSourceCode ) )
-            {
-                ShowStatus( "Failed to analyze source code" );
-                InputEnabled( true );
-                return;
-            }
-
-            String theVideoId;
-            if( !Utilities.StringBetween( theSourceCode, "\"video_id\": \"", "\"", out theVideoId ) )
-            {
-                ShowStatus( "Failed to extract video's id" );
-                InputEnabled( true );
-                return;
-            }
-
-            String theToken;
-            if( !Utilities.StringBetween( theSourceCode, "\"t\": \"", "\"", out theToken ) )
-            {
-                ShowStatus( "Failed to extract token" );
-                InputEnabled( true );
-                return;
-            }
-
-            String theFmtMap;
-            if( !Utilities.StringBetween( theSourceCode, "\"fmt_map\": \"", "\"", out theFmtMap ) )
-            {
-                ShowStatus( "Failed to extract video's fmt map" );
-                InputEnabled( true );
-                return;
-            }
-
-            //System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( theFullScreenUrl.Query );
-
-            //String theVideoTitle = theQueryStrings[ "title" ];
-            //String theVideoId    = theQueryStrings[ "video_id" ];
-            //String theToken      = theQueryStrings[ "t" ];
-            //String theFmtMap     = theQueryStrings[ "fmt_map" ];
-
-            String thePreferedQuality = Settings.YouTubeQuality();
-            String theQuality = Utilities.YouTubeAvailableQuality( theFmtMap, thePreferedQuality );
-
-            Uri theThumbnailUrl = new Uri( "http://img.youtube.com/vi/" + theVideoId + "/default.jpg" );
-            Uri theVideoUrl     = new Uri( "http://www.youtube.com/get_video?" +
-                                           "video_id=" + theVideoId +
-                                           "&t=" + theToken +
-                                           theQuality );
 
             DownloadThumbnail( ref theThumbnailUrl );
             DisplayMediaInfo( theVideoTitle );
 
-            String theFilename = theVideoTitle;
             String theFilePath;
 
             if( !String.IsNullOrEmpty( mPlaylistDestination ) )
@@ -652,7 +586,7 @@ namespace SaveMedia
             }
             else
             {
-                theFilePath = Utilities.SaveFile( theFilename, "Flash Video (*.flv)|*.flv", this );
+                theFilePath = Utilities.SaveFile( theFilename, theFileExtension, this );
             }
 
             DownloadFile( theVideoUrl, theFilePath );
@@ -797,6 +731,7 @@ namespace SaveMedia
             {
                 ShowStatus( theError );
                 InputEnabled( true );
+                return;
             }
 
             DownloadThumbnail( ref theThumbnailUrl );
@@ -830,6 +765,41 @@ namespace SaveMedia
             {
                 ShowStatus( theError );
                 InputEnabled( true );
+                return;
+            }
+
+            DownloadThumbnail( ref theThumbnailUrl );
+            DisplayMediaInfo( theVideoTitle );
+
+            String theFilePath = Utilities.SaveFile( theFilename, theFileExtension, this );
+
+            DownloadFile( theVideoUrl, theFilePath );
+        }
+
+        private void DownloadCollegeHumorVideo( ref Uri aUrl )
+        {
+            ShowStatus( "Connecting to " + aUrl.Host );
+
+            String theVideoTitle;
+            Uri    theVideoUrl;
+            Uri    theThumbnailUrl;
+            String theFilename;
+            String theFileExtension;
+            String theError;
+
+            Sites.CollegeHumor.TryParse( aUrl,
+                out theVideoTitle,
+                out theVideoUrl,
+                out theThumbnailUrl,
+                out theFilename,
+                out theFileExtension,
+                out theError );
+
+            if( !String.IsNullOrEmpty( theError ) )
+            {
+                ShowStatus( theError );
+                InputEnabled( true );
+                return;
             }
 
             DownloadThumbnail( ref theThumbnailUrl );

@@ -41,12 +41,13 @@
             System.Windows.Forms.Label FFmpegLabel;
             System.Windows.Forms.LinkLabel theFFmpegLink;
             System.Windows.Forms.LinkLabel theVimeoLink;
+            System.Windows.Forms.LinkLabel theRapidShareLink;
+            System.Windows.Forms.LinkLabel theCollegeHumorLink;
             System.Windows.Forms.TableLayoutPanel theTableLayout;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager( typeof( AboutBox ) );
             this.mDate = new System.Windows.Forms.Label();
             this.mCopyright = new System.Windows.Forms.Label();
             this.mTitle = new System.Windows.Forms.Label();
-            this.theRapidShareLink = new System.Windows.Forms.LinkLabel();
             this.theLogo = new System.Windows.Forms.PictureBox();
             theTableLayout2 = new System.Windows.Forms.TableLayoutPanel();
             theEmailLabel = new System.Windows.Forms.Label();
@@ -61,6 +62,8 @@
             FFmpegLabel = new System.Windows.Forms.Label();
             theFFmpegLink = new System.Windows.Forms.LinkLabel();
             theVimeoLink = new System.Windows.Forms.LinkLabel();
+            theRapidShareLink = new System.Windows.Forms.LinkLabel();
+            theCollegeHumorLink = new System.Windows.Forms.LinkLabel();
             theTableLayout = new System.Windows.Forms.TableLayoutPanel();
             theTableLayout2.SuspendLayout();
             theTableLayout.SuspendLayout();
@@ -77,9 +80,9 @@
             theTableLayout2.Controls.Add( theEmail, 1, 7 );
             theTableLayout2.Controls.Add( this.mDate, 1, 5 );
             theTableLayout2.Controls.Add( theDateLabel, 0, 5 );
-            theTableLayout2.Controls.Add( theNewGroundsLink, 0, 15 );
-            theTableLayout2.Controls.Add( theTudouLink, 0, 19 );
-            theTableLayout2.Controls.Add( theYouTubeLink, 0, 23 );
+            theTableLayout2.Controls.Add( theNewGroundsLink, 0, 16 );
+            theTableLayout2.Controls.Add( theTudouLink, 0, 18 );
+            theTableLayout2.Controls.Add( theYouTubeLink, 0, 20 );
             theTableLayout2.Controls.Add( theSupportedWebLabel, 0, 13 );
             theTableLayout2.Controls.Add( theWebLabel, 0, 9 );
             theTableLayout2.Controls.Add( theWeb, 1, 9 );
@@ -87,12 +90,13 @@
             theTableLayout2.Controls.Add( this.mCopyright, 0, 3 );
             theTableLayout2.Controls.Add( this.mTitle, 0, 1 );
             theTableLayout2.Controls.Add( theFFmpegLink, 1, 11 );
-            theTableLayout2.Controls.Add( theVimeoLink, 0, 21 );
-            theTableLayout2.Controls.Add( this.theRapidShareLink, 0, 17 );
+            theTableLayout2.Controls.Add( theVimeoLink, 0, 19 );
+            theTableLayout2.Controls.Add( theRapidShareLink, 0, 17 );
+            theTableLayout2.Controls.Add( theCollegeHumorLink, 0, 15 );
             theTableLayout2.Location = new System.Drawing.Point( 69, 3 );
             theTableLayout2.Margin = new System.Windows.Forms.Padding( 3, 3, 3, 6 );
             theTableLayout2.Name = "theTableLayout2";
-            theTableLayout2.RowCount = 24;
+            theTableLayout2.RowCount = 21;
             theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 5F ) );
             theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle() );
             theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 5F ) );
@@ -109,15 +113,17 @@
             theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle() );
             theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 5F ) );
             theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle() );
-            theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 3F ) );
             theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle() );
-            theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 3F ) );
             theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle() );
-            theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 3F ) );
             theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle() );
-            theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 3F ) );
             theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle() );
-            theTableLayout2.Size = new System.Drawing.Size( 251, 230 );
+            theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle() );
+            theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 20F ) );
+            theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 20F ) );
+            theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 20F ) );
+            theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 20F ) );
+            theTableLayout2.RowStyles.Add( new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute, 20F ) );
+            theTableLayout2.Size = new System.Drawing.Size( 236, 231 );
             theTableLayout2.TabIndex = 0;
             // 
             // theEmailLabel
@@ -133,8 +139,7 @@
             // 
             theEmail.AutoSize = true;
             theEmail.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            theEmail.LinkColor = System.Drawing.Color.Black;
-            theEmail.Location = new System.Drawing.Point( 72, 75 );
+            theEmail.Location = new System.Drawing.Point( 57, 75 );
             theEmail.Name = "theEmail";
             theEmail.Size = new System.Drawing.Size( 127, 13 );
             theEmail.TabIndex = 4;
@@ -145,7 +150,7 @@
             // mDate
             // 
             this.mDate.AutoSize = true;
-            this.mDate.Location = new System.Drawing.Point( 72, 59 );
+            this.mDate.Location = new System.Drawing.Point( 57, 59 );
             this.mDate.Name = "mDate";
             this.mDate.Size = new System.Drawing.Size( 38, 13 );
             this.mDate.TabIndex = 1;
@@ -165,8 +170,8 @@
             theNewGroundsLink.AutoSize = true;
             theTableLayout2.SetColumnSpan( theNewGroundsLink, 2 );
             theNewGroundsLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            theNewGroundsLink.LinkColor = System.Drawing.Color.Black;
-            theNewGroundsLink.Location = new System.Drawing.Point( 3, 153 );
+            theNewGroundsLink.Location = new System.Drawing.Point( 12, 166 );
+            theNewGroundsLink.Margin = new System.Windows.Forms.Padding( 12, 0, 3, 0 );
             theNewGroundsLink.Name = "theNewGroundsLink";
             theNewGroundsLink.Size = new System.Drawing.Size( 69, 13 );
             theNewGroundsLink.TabIndex = 9;
@@ -179,8 +184,8 @@
             theTudouLink.AutoSize = true;
             theTableLayout2.SetColumnSpan( theTudouLink, 2 );
             theTudouLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            theTudouLink.LinkColor = System.Drawing.Color.Black;
-            theTudouLink.Location = new System.Drawing.Point( 3, 185 );
+            theTudouLink.Location = new System.Drawing.Point( 12, 192 );
+            theTudouLink.Margin = new System.Windows.Forms.Padding( 12, 0, 3, 0 );
             theTudouLink.Name = "theTudouLink";
             theTudouLink.Size = new System.Drawing.Size( 77, 13 );
             theTudouLink.TabIndex = 10;
@@ -193,8 +198,8 @@
             theYouTubeLink.AutoSize = true;
             theTableLayout2.SetColumnSpan( theYouTubeLink, 2 );
             theYouTubeLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            theYouTubeLink.LinkColor = System.Drawing.Color.Black;
-            theYouTubeLink.Location = new System.Drawing.Point( 3, 217 );
+            theYouTubeLink.Location = new System.Drawing.Point( 12, 218 );
+            theYouTubeLink.Margin = new System.Windows.Forms.Padding( 12, 0, 3, 0 );
             theYouTubeLink.Name = "theYouTubeLink";
             theYouTubeLink.Size = new System.Drawing.Size( 51, 13 );
             theYouTubeLink.TabIndex = 11;
@@ -225,8 +230,7 @@
             // 
             theWeb.AutoSize = true;
             theWeb.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            theWeb.LinkColor = System.Drawing.Color.Black;
-            theWeb.Location = new System.Drawing.Point( 72, 91 );
+            theWeb.Location = new System.Drawing.Point( 57, 91 );
             theWeb.Name = "theWeb";
             theWeb.Size = new System.Drawing.Size( 176, 13 );
             theWeb.TabIndex = 5;
@@ -268,13 +272,12 @@
             // 
             theFFmpegLink.AutoSize = true;
             theFFmpegLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            theFFmpegLink.LinkColor = System.Drawing.Color.Black;
-            theFFmpegLink.Location = new System.Drawing.Point( 72, 107 );
+            theFFmpegLink.Location = new System.Drawing.Point( 57, 107 );
             theFFmpegLink.Name = "theFFmpegLink";
-            theFFmpegLink.Size = new System.Drawing.Size( 88, 13 );
+            theFFmpegLink.Size = new System.Drawing.Size( 100, 13 );
             theFFmpegLink.TabIndex = 13;
             theFFmpegLink.TabStop = true;
-            theFFmpegLink.Text = "r19400, 11-07-09";
+            theFFmpegLink.Text = "r20267, 2009-10-18";
             theFFmpegLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler( this.theFFmpegLink_LinkClicked );
             // 
             // theVimeoLink
@@ -282,8 +285,8 @@
             theVimeoLink.AutoSize = true;
             theTableLayout2.SetColumnSpan( theVimeoLink, 2 );
             theVimeoLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            theVimeoLink.LinkColor = System.Drawing.Color.Black;
-            theVimeoLink.Location = new System.Drawing.Point( 3, 201 );
+            theVimeoLink.Location = new System.Drawing.Point( 12, 205 );
+            theVimeoLink.Margin = new System.Windows.Forms.Padding( 12, 0, 3, 0 );
             theVimeoLink.Name = "theVimeoLink";
             theVimeoLink.Size = new System.Drawing.Size( 36, 13 );
             theVimeoLink.TabIndex = 14;
@@ -293,16 +296,31 @@
             // 
             // theRapidShareLink
             // 
-            this.theRapidShareLink.AutoSize = true;
-            this.theRapidShareLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            this.theRapidShareLink.LinkColor = System.Drawing.Color.Black;
-            this.theRapidShareLink.Location = new System.Drawing.Point( 3, 169 );
-            this.theRapidShareLink.Name = "theRapidShareLink";
-            this.theRapidShareLink.Size = new System.Drawing.Size( 63, 13 );
-            this.theRapidShareLink.TabIndex = 15;
-            this.theRapidShareLink.TabStop = true;
-            this.theRapidShareLink.Text = "RapidShare";
-            this.theRapidShareLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler( this.theRapidShareLink_LinkClicked );
+            theRapidShareLink.AutoSize = true;
+            theTableLayout2.SetColumnSpan( theRapidShareLink, 2 );
+            theRapidShareLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
+            theRapidShareLink.Location = new System.Drawing.Point( 12, 179 );
+            theRapidShareLink.Margin = new System.Windows.Forms.Padding( 12, 0, 3, 0 );
+            theRapidShareLink.Name = "theRapidShareLink";
+            theRapidShareLink.Size = new System.Drawing.Size( 63, 13 );
+            theRapidShareLink.TabIndex = 15;
+            theRapidShareLink.TabStop = true;
+            theRapidShareLink.Text = "RapidShare";
+            theRapidShareLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler( this.theRapidShareLink_LinkClicked );
+            // 
+            // theCollegeHumorLink
+            // 
+            theCollegeHumorLink.AutoSize = true;
+            theTableLayout2.SetColumnSpan( theCollegeHumorLink, 2 );
+            theCollegeHumorLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
+            theCollegeHumorLink.Location = new System.Drawing.Point( 12, 153 );
+            theCollegeHumorLink.Margin = new System.Windows.Forms.Padding( 12, 0, 3, 0 );
+            theCollegeHumorLink.Name = "theCollegeHumorLink";
+            theCollegeHumorLink.Size = new System.Drawing.Size( 73, 13 );
+            theCollegeHumorLink.TabIndex = 16;
+            theCollegeHumorLink.TabStop = true;
+            theCollegeHumorLink.Text = "CollegeHumor";
+            theCollegeHumorLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler( this.theCollegeHumorLink_LinkClicked );
             // 
             // theTableLayout
             // 
@@ -319,7 +337,7 @@
             theTableLayout.Name = "theTableLayout";
             theTableLayout.RowCount = 1;
             theTableLayout.RowStyles.Add( new System.Windows.Forms.RowStyle() );
-            theTableLayout.Size = new System.Drawing.Size( 323, 239 );
+            theTableLayout.Size = new System.Drawing.Size( 308, 240 );
             theTableLayout.TabIndex = 2;
             // 
             // theLogo
@@ -338,7 +356,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size( 353, 264 );
+            this.ClientSize = new System.Drawing.Size( 353, 274 );
             this.Controls.Add( theTableLayout );
             this.Icon = ( (System.Drawing.Icon)( resources.GetObject( "$this.Icon" ) ) );
             this.MaximizeBox = false;
@@ -364,6 +382,5 @@
         private System.Windows.Forms.Label mDate;
         private System.Windows.Forms.PictureBox theLogo;
         private System.Windows.Forms.Label mCopyright;
-        private System.Windows.Forms.LinkLabel theRapidShareLink;
     }
 }

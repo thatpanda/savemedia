@@ -315,14 +315,14 @@
             // optionsToolStripMenuItem
             // 
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size( 56, 20 );
-            this.optionsToolStripMenuItem.Text = "Options";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size( 61, 20 );
+            this.optionsToolStripMenuItem.Text = "&Options";
             this.optionsToolStripMenuItem.Click += new System.EventHandler( this.optionsToolStripMenuItem_Click );
             // 
             // mAboutToolStripMenuItem
             // 
             this.mAboutToolStripMenuItem.Name = "mAboutToolStripMenuItem";
-            this.mAboutToolStripMenuItem.Size = new System.Drawing.Size( 48, 20 );
+            this.mAboutToolStripMenuItem.Size = new System.Drawing.Size( 52, 20 );
             this.mAboutToolStripMenuItem.Text = "&About";
             this.mAboutToolStripMenuItem.Click += new System.EventHandler( this.mAboutToolStripMenuItem_Click );
             // 

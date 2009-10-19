@@ -7,7 +7,7 @@ namespace SaveMedia.Sites
 {
     static class NewGrounds
     {
-        public static void TryParse( Uri aUrl,
+        public static void TryParse( Uri        aUrl,
                                      out String aVideoTitle,
                                      out Uri    aVideoUrl,
                                      out Uri    aThumbnailUrl,
@@ -29,12 +29,12 @@ namespace SaveMedia.Sites
                 return;
             }
 
-            if( !Utilities.StringBetween( theSourceCode, "<title>", "</title>", out aVideoTitle ) )
+            String theVideoTitle;
+            if( !Utilities.StringBetween( theSourceCode, "<title>", "</title>", out theVideoTitle ) )
             {
                 aError = "Failed to read video's title";
                 return;
             }
-            aVideoTitle = Uri.UnescapeDataString( aVideoTitle );
 
             String theVideoUrlStr;
             if( !Utilities.StringBetween( theSourceCode, "var fw = new FlashWriter(\"", "\"", out theVideoUrlStr ) )
@@ -50,9 +50,9 @@ namespace SaveMedia.Sites
                 return;
             }
 
+            aVideoTitle = Uri.UnescapeDataString( theVideoTitle );
             aThumbnailUrl = new Uri( theThumbnailUrlStr );
             aVideoUrl     = new Uri( theVideoUrlStr );
-
             aFilename = aVideoTitle;
             aFileExtension = "Flash Movie (*.swf)|*.swf";
         }

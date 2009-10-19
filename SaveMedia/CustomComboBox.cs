@@ -15,7 +15,7 @@ namespace SaveMedia
 
         public CustomComboBox()
         {
-            InitializeComponent();            
+            InitializeComponent();
         }
 
         public void BuildImageList()

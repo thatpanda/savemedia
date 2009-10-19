@@ -124,8 +124,11 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Settings.cs" />
+    <Compile Include="Sites\Brightcove.cs" />
+    <Compile Include="Sites\CollegeHumor.cs" />
     <Compile Include="Sites\NewGrounds.cs" />
     <Compile Include="Sites\Vimeo.cs" />
+    <Compile Include="Sites\YouTube.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>

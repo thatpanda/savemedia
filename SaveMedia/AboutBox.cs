@@ -36,6 +36,11 @@ namespace SaveMedia
             System.Diagnostics.Process.Start( "http://ffmpeg.arrozcru.org/autobuilds/" );
         }
 
+        private void theCollegeHumorLink_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
+        {
+            System.Diagnostics.Process.Start( "http://www.collegehumor.com/" );
+        }
+
         private void theNewGroundsLink_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
         {
             System.Diagnostics.Process.Start( "http://www.newgrounds.com/" );

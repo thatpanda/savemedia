@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 
 namespace SaveMedia.Sites
 {
-    class Vimeo
+    class CollegeHumor
     {
         public static void TryParse( Uri        aUrl,
                                      out String aVideoTitle,
@@ -30,25 +31,18 @@ namespace SaveMedia.Sites
             }
 
             String theVideoId;
-            if( !Utilities.StringBetween( theSourceCode, "http://vimeo.com/moogaloop.swf?clip_id=", "\"", out theVideoId ) )
+            if( !Utilities.StringBetween( theSourceCode, "<link rel=\"canonical\" href=\"", "\"", out theVideoId ) )
             {
                 aError = "Failed to read video's ID";
                 return;
             }
 
-            String theThumbnailUrlStr;
-            if( !Utilities.StringBetween( theSourceCode, "<link rel=\"videothumbnail\" href=\"", "\"", out theThumbnailUrlStr ) )
-            {
-                aError = "Failed to read video's thumbnail";
-                return;
-            }
-
-            Uri theXmlUrl = new Uri( "http://vimeo.com/moogaloop/load/clip:" + theVideoId + "/local?param_clip_id=" + theVideoId );
+            Uri theXmlUrl = new Uri( "http://www.collegehumor.com/moogaloop" + theVideoId );
 
             String theXmlSource;
             if( !Utilities.DownloadString( theXmlUrl, out theXmlSource ) )
             {
-                aError = "Video is not found";
+                aError = "Failed to connect to " + theXmlUrl.Host;
                 return;
             }
 
@@ -59,22 +53,22 @@ namespace SaveMedia.Sites
                 return;
             }
 
-            String theRequestSignature;
-            if( !Utilities.StringBetween( theXmlSource, "<request_signature>", "</request_signature>", out theRequestSignature ) )
+            String theVideoUrlStr;
+            if( !Utilities.StringBetween( theXmlSource, "<file>", "</file>", out theVideoUrlStr ) )
             {
-                aError = "Failed to read video's signature";
+                aError = "Failed to read video's Url";
                 return;
             }
 
-            String theRequestSignatureExpires;
-            if( !Utilities.StringBetween( theXmlSource, "<request_signature_expires>", "</request_signature_expires>", out theRequestSignatureExpires ) )
+            String theThumbnailUrlStr;
+            if( !Utilities.StringBetween( theXmlSource, "<thumbnail>", "</thumbnail>", out theThumbnailUrlStr ) )
             {
-                aError = "Failed to read video's signature";
+                aError = "Failed to read video's thumbnail";
                 return;
             }
 
             aVideoTitle = theVideoTitle;
-            aVideoUrl = new Uri( "http://vimeo.com/moogaloop/play/clip:" + theVideoId + "/" + theRequestSignature + "/" + theRequestSignatureExpires + "/?q=sd&type=local" );
+            aVideoUrl = new Uri( theVideoUrlStr );
             aThumbnailUrl = new Uri( theThumbnailUrlStr );
             aFilename = aVideoTitle;
             aFileExtension = "Flash Video (*.flv)|*.flv";
