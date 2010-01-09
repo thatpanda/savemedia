@@ -36,12 +36,6 @@ namespace SaveMedia.Sites
                 return;
             }
 
-            if( !Utilities.StringBetween( theSourceCode, "var swfArgs = {", "}", out theSourceCode ) )
-            {
-                aError = "Failed to analyze source code";
-                return;
-            }
-
             String theVideoId;
             if( !Utilities.StringBetween( theSourceCode, "\"video_id\": \"", "\"", out theVideoId ) )
             {
