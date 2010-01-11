@@ -7,53 +7,43 @@ namespace SaveMedia.Sites
 {
     static class YouTube
     {
-        public static void TryParse( Uri        aUrl,
-                                     out String aVideoTitle,
-                                     out Uri    aVideoUrl,
-                                     out Uri    aThumbnailUrl,
-                                     out String aFilename,
-                                     out String aFileExtension,
-                                     out String aError )
+        public static void TryParse( Uri                aUrl,
+                                     out DownloadTag    aTag )
         {
-            aVideoTitle = String.Empty;
-            aVideoUrl = aUrl;
-            aThumbnailUrl = aUrl;
-            aFilename = String.Empty;
-            aFileExtension = String.Empty;
-            aError = String.Empty;
+            aTag = new DownloadTag();
 
             String theSourceCode;
             if( !Utilities.DownloadString( aUrl, out theSourceCode ) )
             {
-                aError = "Failed to connect to " + aUrl.Host;
+                aTag.Error = "Failed to connect to " + aUrl.Host;
                 return;
             }
 
             String theVideoTitle;
             if( !Utilities.StringBetween( theSourceCode, "<meta name=\"title\" content=\"", "\">", out theVideoTitle ) )
             {
-                aError = "Failed to extract video's title";
+                aTag.Error = "Failed to extract video's title";
                 return;
             }
 
             String theVideoId;
             if( !Utilities.StringBetween( theSourceCode, "\"video_id\": \"", "\"", out theVideoId ) )
             {
-                aError = "Failed to extract video's id";
+                aTag.Error = "Failed to extract video's id";
                 return;
             }
 
             String theToken;
             if( !Utilities.StringBetween( theSourceCode, "\"t\": \"", "\"", out theToken ) )
             {
-                aError = "Failed to extract token";
+                aTag.Error = "Failed to extract token";
                 return;
             }
 
             String theFmtMap;
             if( !Utilities.StringBetween( theSourceCode, "\"fmt_map\": \"", "\"", out theFmtMap ) )
             {
-                aError = "Failed to extract video's fmt map";
+                aTag.Error = "Failed to extract video's fmt map";
                 return;
             }
 
@@ -67,14 +57,14 @@ namespace SaveMedia.Sites
             String thePreferedQuality = Settings.YouTubeQuality();
             String theQuality = Utilities.YouTubeAvailableQuality( theFmtMap, thePreferedQuality );
 
-            aVideoTitle = theVideoTitle;
-            aVideoUrl = new Uri( "http://www.youtube.com/get_video?" +
-                                 "video_id=" + theVideoId +
-                                 "&t=" + theToken +
-                                 theQuality );
-            aThumbnailUrl = new Uri( "http://img.youtube.com/vi/" + theVideoId + "/default.jpg" );
-            aFilename = aVideoTitle;
-            aFileExtension = "Flash Video (*.flv)|*.flv";
+            aTag.VideoTitle = theVideoTitle;
+            aTag.VideoUrl = new Uri( "http://www.youtube.com/get_video?" +
+                                       "video_id=" + theVideoId +
+                                       "&t=" + theToken +
+                                       theQuality );
+            aTag.ThumbnailUrl = new Uri( "http://img.youtube.com/vi/" + theVideoId + "/default.jpg" );
+            aTag.Filename = aTag.VideoTitle;
+            aTag.FileExtension = "Flash Video (*.flv)|*.flv";
         }
     }
 }

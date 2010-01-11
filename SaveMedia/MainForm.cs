@@ -553,43 +553,32 @@ namespace SaveMedia
         {
             ShowStatus( "Connecting to " + aUrl.Host );
 
-            String theVideoTitle;
-            Uri    theVideoUrl;
-            Uri    theThumbnailUrl;
-            String theFilename;
-            String theFileExtension;
-            String theError;
+            DownloadTag theTag;
 
-            Sites.YouTube.TryParse( aUrl,
-                out theVideoTitle,
-                out theVideoUrl,
-                out theThumbnailUrl,
-                out theFilename,
-                out theFileExtension,
-                out theError );
+            Sites.YouTube.TryParse( aUrl, out theTag );
 
-            if( !String.IsNullOrEmpty( theError ) )
+            if( !String.IsNullOrEmpty( theTag.Error ) )
             {
-                ShowStatus( theError );
+                ShowStatus( theTag.Error );
                 InputEnabled( true );
                 return;
             }
 
-            DownloadThumbnail( ref theThumbnailUrl );
-            DisplayMediaInfo( theVideoTitle );
+            DownloadThumbnail( theTag.ThumbnailUrl );
+            DisplayMediaInfo( theTag.VideoTitle );
 
             String theFilePath;
 
             if( !String.IsNullOrEmpty( mPlaylistDestination ) )
             {
-                theFilePath = mPlaylistDestination + "\\" + Utilities.FilenameCheck( theVideoTitle ) + ".flv";
+                theFilePath = mPlaylistDestination + "\\" + Utilities.FilenameCheck( theTag.VideoTitle ) + ".flv";
             }
             else
             {
-                theFilePath = Utilities.SaveFile( theFilename, theFileExtension, this );
+                theFilePath = Utilities.SaveFile( theTag.Filename, theTag.FileExtension, this );
             }
 
-            DownloadFile( theVideoUrl, theFilePath );
+            DownloadFile( theTag.VideoUrl, theFilePath );
         }
 
         private void DownloadTudouVideo( ref Uri aUrl )
@@ -699,7 +688,7 @@ namespace SaveMedia
             Uri theThumbnailUrl = new Uri( theThumbnailUrlString );
             Uri theVideoUrl     = new Uri( theVideoUrlString );
 
-            DownloadThumbnail( ref theThumbnailUrl );
+            DownloadThumbnail( theThumbnailUrl );
             DisplayMediaInfo( theVideoTitle );
 
             String theFilename = theVideoTitle;
@@ -712,102 +701,69 @@ namespace SaveMedia
         {
             ShowStatus( "Connecting to " + aUrl.Host );
 
-            String theVideoTitle;
-            Uri    theVideoUrl;
-            Uri    theThumbnailUrl;
-            String theFilename;
-            String theFileExtension;
-            String theError;
+            DownloadTag theTag;
 
-            Sites.NewGrounds.TryParse( aUrl,
-                out theVideoTitle,
-                out theVideoUrl,
-                out theThumbnailUrl,
-                out theFilename,
-                out theFileExtension,
-                out theError );
+            Sites.NewGrounds.TryParse( aUrl, out theTag );
 
-            if( !String.IsNullOrEmpty( theError ) )
+            if( !String.IsNullOrEmpty( theTag.Error ) )
             {
-                ShowStatus( theError );
+                ShowStatus( theTag.Error );
                 InputEnabled( true );
                 return;
             }
 
-            DownloadThumbnail( ref theThumbnailUrl );
-            DisplayMediaInfo( theVideoTitle );
+            DownloadThumbnail( theTag.ThumbnailUrl );
+            DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = Utilities.SaveFile( theFilename, theFileExtension, this );
+            String theFilePath = Utilities.SaveFile( theTag.Filename, theTag.FileExtension, this );
 
-            DownloadFile( theVideoUrl, theFilePath );
+            DownloadFile( theTag.VideoUrl, theFilePath );
         }
 
         private void DownloadVimeoVideo( ref Uri aUrl )
         {
             ShowStatus( "Connecting to " + aUrl.Host );
 
-            String theVideoTitle;
-            Uri    theVideoUrl;
-            Uri    theThumbnailUrl;
-            String theFilename;
-            String theFileExtension;
-            String theError;
+            DownloadTag theTag;
 
-            Sites.Vimeo.TryParse( aUrl,
-                out theVideoTitle,
-                out theVideoUrl,
-                out theThumbnailUrl,
-                out theFilename,
-                out theFileExtension,
-                out theError );
+            Sites.Vimeo.TryParse( aUrl, out theTag );
 
-            if( !String.IsNullOrEmpty( theError ) )
+            if( !String.IsNullOrEmpty( theTag.Error ) )
             {
-                ShowStatus( theError );
+                ShowStatus( theTag.Error );
                 InputEnabled( true );
                 return;
             }
 
-            DownloadThumbnail( ref theThumbnailUrl );
-            DisplayMediaInfo( theVideoTitle );
+            DownloadThumbnail( theTag.ThumbnailUrl );
+            DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = Utilities.SaveFile( theFilename, theFileExtension, this );
+            String theFilePath = Utilities.SaveFile( theTag.Filename, theTag.FileExtension, this );
 
-            DownloadFile( theVideoUrl, theFilePath );
+            DownloadFile( theTag.VideoUrl, theFilePath );
         }
 
         private void DownloadCollegeHumorVideo( ref Uri aUrl )
         {
             ShowStatus( "Connecting to " + aUrl.Host );
 
-            String theVideoTitle;
-            Uri    theVideoUrl;
-            Uri    theThumbnailUrl;
-            String theFilename;
-            String theFileExtension;
-            String theError;
+            DownloadTag theTag;
 
-            Sites.CollegeHumor.TryParse( aUrl,
-                out theVideoTitle,
-                out theVideoUrl,
-                out theThumbnailUrl,
-                out theFilename,
-                out theFileExtension,
-                out theError );
+            Sites.CollegeHumor.TryParse( aUrl, out theTag );
 
-            if( !String.IsNullOrEmpty( theError ) )
+            if( !String.IsNullOrEmpty( theTag.Error ) )
             {
-                ShowStatus( theError );
+                ShowStatus( theTag.Error );
                 InputEnabled( true );
                 return;
             }
 
-            DownloadThumbnail( ref theThumbnailUrl );
-            DisplayMediaInfo( theVideoTitle );
+            DownloadThumbnail( theTag.ThumbnailUrl );
+            DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = Utilities.SaveFile( theFilename, theFileExtension, this );
+            String theFilePath = Utilities.SaveFile( theTag.Filename, theTag.FileExtension, this );
 
-            DownloadFile( theVideoUrl, theFilePath );
+            DownloadFile( theTag.VideoUrl, theFilePath );
         }
 
         private void DisplayMediaInfo( String aMediaTitle )
@@ -823,7 +779,7 @@ namespace SaveMedia
             System.Windows.Forms.Application.DoEvents();
         }
 
-        private void DownloadThumbnail( ref Uri aUrl )
+        private void DownloadThumbnail( Uri aUrl )
         {
             mThumbnailPath = System.IO.Path.GetTempFileName();
             mThumbnailClient.Headers.Add( "user-agent", SaveMedia.Program.UserAgent );

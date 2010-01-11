@@ -8,32 +8,22 @@ namespace SaveMedia.Sites
 {
     class CollegeHumor
     {
-        public static void TryParse( Uri        aUrl,
-                                     out String aVideoTitle,
-                                     out Uri    aVideoUrl,
-                                     out Uri    aThumbnailUrl,
-                                     out String aFilename,
-                                     out String aFileExtension,
-                                     out String aError )
+        public static void TryParse( Uri                aUrl,
+                                     out DownloadTag    aTag )
         {
-            aVideoTitle = String.Empty;
-            aVideoUrl = aUrl;
-            aThumbnailUrl = aUrl;
-            aFilename = String.Empty;
-            aFileExtension = String.Empty;
-            aError = String.Empty;
+            aTag = new DownloadTag();
 
             String theSourceCode;
             if( !Utilities.DownloadString( aUrl, out theSourceCode ) )
             {
-                aError = "Failed to connect to " + aUrl.Host;
+                aTag.Error = "Failed to connect to " + aUrl.Host;
                 return;
             }
 
             String theVideoId;
             if( !Utilities.StringBetween( theSourceCode, "<link rel=\"canonical\" href=\"", "\"", out theVideoId ) )
             {
-                aError = "Failed to read video's ID";
+                aTag.Error = "Failed to read video's ID";
                 return;
             }
 
@@ -42,36 +32,36 @@ namespace SaveMedia.Sites
             String theXmlSource;
             if( !Utilities.DownloadString( theXmlUrl, out theXmlSource ) )
             {
-                aError = "Failed to connect to " + theXmlUrl.Host;
+                aTag.Error = "Failed to connect to " + theXmlUrl.Host;
                 return;
             }
 
             String theVideoTitle;
             if( !Utilities.StringBetween( theXmlSource, "<caption>", "</caption>", out theVideoTitle ) )
             {
-                aError = "Failed to read video's title";
+                aTag.Error = "Failed to read video's title";
                 return;
             }
 
             String theVideoUrlStr;
             if( !Utilities.StringBetween( theXmlSource, "<file>", "</file>", out theVideoUrlStr ) )
             {
-                aError = "Failed to read video's Url";
+                aTag.Error = "Failed to read video's Url";
                 return;
             }
 
             String theThumbnailUrlStr;
             if( !Utilities.StringBetween( theXmlSource, "<thumbnail>", "</thumbnail>", out theThumbnailUrlStr ) )
             {
-                aError = "Failed to read video's thumbnail";
+                aTag.Error = "Failed to read video's thumbnail";
                 return;
             }
 
-            aVideoTitle = theVideoTitle;
-            aVideoUrl = new Uri( theVideoUrlStr );
-            aThumbnailUrl = new Uri( theThumbnailUrlStr );
-            aFilename = aVideoTitle;
-            aFileExtension = "Flash Video (*.flv)|*.flv";
+            aTag.VideoTitle = theVideoTitle;
+            aTag.VideoUrl = new Uri( theVideoUrlStr );
+            aTag.ThumbnailUrl = new Uri( theThumbnailUrlStr );
+            aTag.Filename = aTag.VideoTitle;
+            aTag.FileExtension = "Flash Video (*.flv)|*.flv";
         }
     }
 }
