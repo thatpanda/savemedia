@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace SaveMedia
@@ -13,9 +11,9 @@ namespace SaveMedia
         public const String Company         = "";
         public const String Copyright       = "© 2010 Eric Choy";
         public const String AssemblyVersion = "1.0.0.0";
-        public const String FileVersion     = "1.6.2.0";
-        public const String TitleVersion    = "1.6.2b";
-        public const String Date            = "January 10th, 2010";
+        public const String FileVersion     = "1.6.3.0";
+        public const String TitleVersion    = "1.6.3";
+        public const String Date            = "February 18th, 2010";
         public const String UserAgent       = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)";
 
         /// <summary>

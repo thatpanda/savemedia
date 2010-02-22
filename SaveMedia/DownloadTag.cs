@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SaveMedia
 {
@@ -9,19 +6,18 @@ namespace SaveMedia
     {
         public DownloadTag()
         {
-            mUrl = null;
             mVideoTitle = String.Empty;
             mVideoUrl = null;
-            mThumbnailUrl = null;
-            mFilename = String.Empty;
-            mFileExtension = String.Empty;
-            mError = String.Empty;
-        }
 
-        public Uri Url
-        {
-            get{ return mUrl; }
-            set{ mUrl = value; }
+            mThumbnailUrl = null;
+
+            mDefaultFilename = String.Empty;
+            mFileExtension = String.Empty;
+            mDownloadDestination = String.Empty;
+
+            mWaitingTime = 0;
+
+            mError = String.Empty;
         }
 
         public String VideoTitle
@@ -44,8 +40,8 @@ namespace SaveMedia
 
         public String Filename
         {
-            get { return mFilename; }
-            set { mFilename = value; }
+            get { return mDefaultFilename; }
+            set { mDefaultFilename = value; }
         }
 
         public String FileExtension
@@ -54,18 +50,34 @@ namespace SaveMedia
             set { mFileExtension = value; }
         }
 
+        public String DownloadDestination
+        {
+            get { return mDownloadDestination; }
+            set { mDownloadDestination = value; }
+        }
+
+        public int WaitingTime
+        {
+            get { return mWaitingTime; }
+            set { mWaitingTime = value; }
+        }
+
         public String Error
         {
             get { return mError; }
             set { mError = value; }
         }
 
-        private Uri     mUrl;
         private String  mVideoTitle;
         private Uri     mVideoUrl;
+
         private Uri     mThumbnailUrl;
-        private String  mFilename;
+
+        private String  mDefaultFilename;
         private String  mFileExtension;
+        private String  mDownloadDestination;
+
+        private int     mWaitingTime;
         private String  mError;
     }
 }

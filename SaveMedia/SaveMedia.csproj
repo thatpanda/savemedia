@@ -81,7 +81,7 @@
       <DependentUpon>CustomComboBox.cs</DependentUpon>
     </Compile>
     <Compile Include="DownloadTag.cs" />
-    <Compile Include="FlashWindow.cs" />
+    <Compile Include="Utility\FormUtils.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -128,9 +128,16 @@
     <Compile Include="Sites\Brightcove.cs" />
     <Compile Include="Sites\CollegeHumor.cs" />
     <Compile Include="Sites\NewGrounds.cs" />
+    <Compile Include="Sites\RapidShare.cs" />
+    <Compile Include="Sites\Tudou.cs" />
     <Compile Include="Sites\Vimeo.cs" />
     <Compile Include="Sites\YouTube.cs" />
-    <Compile Include="Utilities.cs" />
+    <Compile Include="Utility\ClipboardUtils.cs" />
+    <Compile Include="Utility\ConvertUtils.cs" />
+    <Compile Include="Utility\FileUtils.cs" />
+    <Compile Include="Utility\ImageUtils.cs" />
+    <Compile Include="Utility\NetUtils.cs" />
+    <Compile Include="Utility\StringUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

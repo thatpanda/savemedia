@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
+using Utility;
 
 namespace SaveMedia
 {
@@ -42,7 +41,7 @@ namespace SaveMedia
                 mSettings = new System.Collections.Generic.Dictionary<String, String>();
             }
 
-            mSettings = Utilities.ReadXml( gcSettingsFilename );
+            mSettings = FileUtils.ReadXml( gcSettingsFilename );
         }
 
         public static void Save()
@@ -52,7 +51,7 @@ namespace SaveMedia
                 return;
             }
 
-            Utilities.WriteXml( gcSettingsFilename, ref mSettings );
+            FileUtils.WriteXml( gcSettingsFilename, ref mSettings );
         }
     }
 }

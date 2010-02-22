@@ -1,27 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
+
+using Utility;
 
 namespace SaveMedia.Sites
 {
     class CollegeHumor
     {
-        public static void TryParse( Uri                aUrl,
+        public static void TryParse( ref Uri            aUrl,
                                      out DownloadTag    aTag )
         {
             aTag = new DownloadTag();
 
             String theSourceCode;
-            if( !Utilities.DownloadString( aUrl, out theSourceCode ) )
+            if( !NetUtils.DownloadString( aUrl, out theSourceCode ) )
             {
                 aTag.Error = "Failed to connect to " + aUrl.Host;
                 return;
             }
 
             String theVideoId;
-            if( !Utilities.StringBetween( theSourceCode, "<link rel=\"canonical\" href=\"", "\"", out theVideoId ) )
+            if( !StringUtils.StringBetween( theSourceCode, "<link rel=\"canonical\" href=\"", "\"", out theVideoId ) )
             {
                 aTag.Error = "Failed to read video's ID";
                 return;
@@ -30,28 +28,28 @@ namespace SaveMedia.Sites
             Uri theXmlUrl = new Uri( "http://www.collegehumor.com/moogaloop" + theVideoId );
 
             String theXmlSource;
-            if( !Utilities.DownloadString( theXmlUrl, out theXmlSource ) )
+            if( !NetUtils.DownloadString( theXmlUrl, out theXmlSource ) )
             {
                 aTag.Error = "Failed to connect to " + theXmlUrl.Host;
                 return;
             }
 
             String theVideoTitle;
-            if( !Utilities.StringBetween( theXmlSource, "<caption>", "</caption>", out theVideoTitle ) )
+            if( !StringUtils.StringBetween( theXmlSource, "<caption>", "</caption>", out theVideoTitle ) )
             {
                 aTag.Error = "Failed to read video's title";
                 return;
             }
 
             String theVideoUrlStr;
-            if( !Utilities.StringBetween( theXmlSource, "<file>", "</file>", out theVideoUrlStr ) )
+            if( !StringUtils.StringBetween( theXmlSource, "<file>", "</file>", out theVideoUrlStr ) )
             {
                 aTag.Error = "Failed to read video's Url";
                 return;
             }
 
             String theThumbnailUrlStr;
-            if( !Utilities.StringBetween( theXmlSource, "<thumbnail>", "</thumbnail>", out theThumbnailUrlStr ) )
+            if( !StringUtils.StringBetween( theXmlSource, "<thumbnail>", "</thumbnail>", out theThumbnailUrlStr ) )
             {
                 aTag.Error = "Failed to read video's thumbnail";
                 return;

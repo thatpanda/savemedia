@@ -48,7 +48,7 @@
             this.mOkButton = new System.Windows.Forms.Button();
             this.mCancelButton = new System.Windows.Forms.Button();
             this.mMenuStrip = new System.Windows.Forms.MenuStrip();
-            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mOptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mAboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             mMainLayout = new System.Windows.Forms.FlowLayoutPanel();
             theMediaInfoLayout = new System.Windows.Forms.TableLayoutPanel();
@@ -301,7 +301,7 @@
             // mMenuStrip
             // 
             this.mMenuStrip.Items.AddRange( new System.Windows.Forms.ToolStripItem[] {
-            this.optionsToolStripMenuItem,
+            this.mOptionsToolStripMenuItem,
             this.mAboutToolStripMenuItem} );
             this.mMenuStrip.Location = new System.Drawing.Point( 0, 0 );
             this.mMenuStrip.MaximumSize = new System.Drawing.Size( 0, 22 );
@@ -312,12 +312,12 @@
             this.mMenuStrip.TabIndex = 4;
             this.mMenuStrip.Text = "MenuStrip";
             // 
-            // optionsToolStripMenuItem
+            // mOptionsToolStripMenuItem
             // 
-            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size( 61, 20 );
-            this.optionsToolStripMenuItem.Text = "&Options";
-            this.optionsToolStripMenuItem.Click += new System.EventHandler( this.optionsToolStripMenuItem_Click );
+            this.mOptionsToolStripMenuItem.Name = "mOptionsToolStripMenuItem";
+            this.mOptionsToolStripMenuItem.Size = new System.Drawing.Size( 61, 20 );
+            this.mOptionsToolStripMenuItem.Text = "&Options";
+            this.mOptionsToolStripMenuItem.Click += new System.EventHandler( this.mOptionsToolStripMenuItem_Click );
             // 
             // mAboutToolStripMenuItem
             // 
@@ -382,7 +382,7 @@
         private System.Windows.Forms.Button mOkButton;
         private System.Windows.Forms.Button mCancelButton;
         private System.Windows.Forms.Label mLocationLabel;
-        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem mOptionsToolStripMenuItem;
     }
 }
 

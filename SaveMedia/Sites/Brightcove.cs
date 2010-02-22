@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SaveMedia.Sites
 {
     class Brightcove
     {
-        public static void TryParse( Uri        aUrl,
+        public static void TryParse( ref Uri    aUrl,
                                      out String aVideoTitle,
                                      out Uri    aVideoUrl,
                                      out Uri    aThumbnailUrl,

@@ -9,12 +9,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
+using Utility;
+
 namespace SaveMedia
 {
     public partial class MainForm : Form
     {
         private const String gcFFmpegPath = "Plugin\\bin\\ffmpeg.exe";
-        private const double gcOneMB = 1000000;
+        private const double gcOneMB = 1024*1024;
 
         private System.Net.WebClient mWebClient;
         private System.Net.WebClient mThumbnailClient;
@@ -41,8 +43,8 @@ namespace SaveMedia
         private String  mDelayDownloadDestination;
         private Timer   mDelayTimer;
 
-        private System.Collections.Generic.List< Uri > mDownloadQuery;
-        private System.Collections.Generic.List< String > mConvertQuery;
+        private System.Collections.Generic.List< DownloadTag > mDownloadQueue;
+        private System.Collections.Generic.List< String > mConvertQueue;
 
         delegate void ChangeLayoutCallBack( String aPhase );
         delegate void NotifyUserCallBack();
@@ -104,8 +106,8 @@ namespace SaveMedia
             mDelayTimer.Interval = 1000;
             mDelayTimer.Tick += new EventHandler( mDelayTimer_Tick );
 
-            mDownloadQuery = new List<Uri>();
-            mConvertQuery = new List<String>();
+            mDownloadQueue = new List< DownloadTag >();
+            mConvertQueue = new List< String >();
         }
 
         private void mDelayTimer_Tick( object sender, EventArgs e )
@@ -116,13 +118,13 @@ namespace SaveMedia
             {
                 mDelayTimer.Stop();
 
-                if( mDownloadQuery.Count != 0 )
+                if( mDownloadQueue.Count != 0 )
                 {
-                    DownloadFile( mDownloadQuery[ 0 ], mDelayDownloadDestination );
+                    DownloadFile( mDownloadQueue[ 0 ] );
                 }
                 else
                 {
-                    ChangeLayout( "Download faile" );
+                    ChangeLayout( "Download failed" );
                 }
             }
             else
@@ -160,8 +162,8 @@ namespace SaveMedia
         private void mDownloadButton_Click( object sender, EventArgs e )
         {
             InputEnabled( false );
-            mDownloadQuery.Clear();
-            mConvertQuery.Clear();
+            mDownloadQueue.Clear();
+            mConvertQueue.Clear();
             mPlaylistDestination = String.Empty;
             mProgressBar.Value = 0;
 
@@ -214,10 +216,10 @@ namespace SaveMedia
             else if( aUrl.OriginalString.StartsWith( "http://" ) )
             {
                 String theFilename = System.IO.Path.GetFileName( aUrl.OriginalString );
-                theFilename = Utilities.FilenameCheck( theFilename );
+                theFilename = FileUtils.FilenameCheck( theFilename );
 
                 String theFileExt = System.IO.Path.GetExtension( aUrl.OriginalString );
-                String theFilePath = Utilities.SaveFile( theFilename, theFileExt + "|*" + theFileExt, this );
+                String theFilePath = FileUtils.SaveFile( theFilename, theFileExt + "|*" + theFileExt, this );
 
                 DownloadFile( aUrl, theFilePath );
             }
@@ -265,14 +267,14 @@ namespace SaveMedia
                 System.IO.File.Move( mConversionTempOutPath, mConversionDestination );
             }
 
-            if( mConvertQuery.Count > 0 )
+            if( mConvertQueue.Count > 0 )
             {
-                mConvertQuery.RemoveAt( 0 );
+                mConvertQueue.RemoveAt( 0 );
             }
 
-            if( mConvertQuery.Count != 0 )
+            if( mConvertQueue.Count != 0 )
             {
-                ConvertFile( mConvertQuery[ 0 ], mConvertQuery[ 0 ] );
+                ConvertFile( mConvertQueue[ 0 ], mConvertQueue[ 0 ] );
             }
             else if( isSuccess )
             {
@@ -321,101 +323,27 @@ namespace SaveMedia
 
         private void DownloadRapidShareFile( ref Uri aUrl )
         {
-            if( aUrl.Host.StartsWith( "www" ) )
-            {
-                String theSource;
-                if( !Utilities.DownloadString( aUrl, out theSource ) )
-                {
-                    ShowStatus( "Failed to connect to " + aUrl.Host );
-                    InputEnabled( true );
-                    return;
-                }
-
-                String theNextUrlStr;
-                if( !Utilities.StringBetween( theSource, "<form id=\"ff\" action=\"", "\"", out theNextUrlStr ) )
-                {
-                    ShowStatus( "Failed to analyze source code" );
-                    InputEnabled( true );
-                    return;
-                }
-
-                Uri theNextUrl;
-                if( Uri.TryCreate( theNextUrlStr, UriKind.Absolute, out theNextUrl ) )
-                {
-                    DownloadRapidShareFile( ref theNextUrl );
-                }
-                else
-                {
-                    ShowStatus( "Unknown URL" );
-                    InputEnabled( true );
-                }
-
-                return;
-            }
-
-            mWaitingTime = 0;
-            mDelayDownloadDestination = String.Empty;
             mDelayTimer.Stop();
 
-            HttpWebRequest theRequest = (HttpWebRequest)WebRequest.Create( aUrl );
-            theRequest.UserAgent = SaveMedia.Program.UserAgent;
-            theRequest.Referer = aUrl.OriginalString;
-            theRequest.Method = "POST";
-            theRequest.ContentType = "application/x-www-form-urlencoded";
-            theRequest.Credentials = CredentialCache.DefaultCredentials;
+            ShowStatus( "Connecting to " + aUrl.Host );
 
-            String thePostData = "dl.start=Free";
-            theRequest.ContentLength = thePostData.Length;
+            DownloadTag theTag;
 
-            System.IO.Stream theRequestStream = theRequest.GetRequestStream();
-            System.IO.StreamWriter theStreamWriter = new System.IO.StreamWriter( theRequestStream );
-            theStreamWriter.Write( thePostData );
-            theStreamWriter.Close();
+            Sites.RapidShare.TryParse( ref aUrl, out theTag );
 
-            HttpWebResponse theResponse = (HttpWebResponse)theRequest.GetResponse();
-            System.IO.Stream theResponseStream = theResponse.GetResponseStream();
-            System.IO.StreamReader theStreamReader = new System.IO.StreamReader( theResponseStream );
-
-            String theSourceCode = theStreamReader.ReadToEnd();
-            theStreamReader.Close();
-            theResponseStream.Close();
-            theResponse.Close();
-
-            String theFirstMirror;
-            if( !Utilities.StringBetween( theSourceCode, "<form name=\"dlf\" action=\"", "\"", out theFirstMirror ) )
+            if( !String.IsNullOrEmpty( theTag.Error ) )
             {
-                ShowStatus( "Failed to extract mirror's URL" );
+                ShowStatus( theTag.Error );
                 InputEnabled( true );
                 return;
             }
 
-            Uri theDownloadUrl;
-            bool isValid = Uri.TryCreate( theFirstMirror, UriKind.Absolute, out theDownloadUrl );
-            if( !isValid )
-            {
-                ShowStatus( "Unknown URL" );
-                InputEnabled( true );
-                return;
-            }
-
-            String theWaitingTime;
-            if( !Utilities.StringBetween( theSourceCode, "var c=", ";", out theWaitingTime ) ||
-                !int.TryParse( theWaitingTime, out mWaitingTime ) )
-            {
-                ShowStatus( "Failed to extract waiting time" );
-                InputEnabled( true );
-                return;
-            }
-
+            mWaitingTime = theTag.WaitingTime;
             mDelayTimer.Start();
 
-            String theFilename = System.IO.Path.GetFileName( theDownloadUrl.OriginalString );
-            theFilename = Utilities.FilenameCheck( theFilename );
+            theTag.DownloadDestination = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension + "|*" + theTag.FileExtension, this );
 
-            String theFileExt = System.IO.Path.GetExtension( theDownloadUrl.OriginalString );
-            mDelayDownloadDestination = Utilities.SaveFile( theFilename, theFileExt + "|*" + theFileExt, this );
-
-            if( String.IsNullOrEmpty( mDelayDownloadDestination ) )
+            if( String.IsNullOrEmpty( theTag.DownloadDestination ) )
             {
                 ChangeLayout( "Cancel clicked" );
                 mDelayTimer.Stop();
@@ -423,7 +351,7 @@ namespace SaveMedia
                 return;
             }
 
-            mDownloadQuery.Add( theDownloadUrl );
+            mDownloadQueue.Add( theTag );
 
             mDownloadButton.Visible = false;
             mCancelButton.Visible = true;
@@ -472,7 +400,7 @@ namespace SaveMedia
             }
 
             String theSourceCode;
-            if( !Utilities.DownloadString( aUrl, out theSourceCode ) )
+            if( !NetUtils.DownloadString( aUrl, out theSourceCode ) )
             {
                 ShowStatus( "Failed to connect to " + aUrl.Host );
                 InputEnabled( true );
@@ -480,7 +408,7 @@ namespace SaveMedia
             }
 
             String thePlaylistTitle;
-            if( !Utilities.StringBetween( theSourceCode, "<h1>", "</h1>", out thePlaylistTitle ) )
+            if( !StringUtils.StringBetween( theSourceCode, "<h1>", "</h1>", out thePlaylistTitle ) )
             {
                 ShowStatus( "Failed to analyze playlist" );
                 InputEnabled( true );
@@ -515,37 +443,39 @@ namespace SaveMedia
             {
                 String thePartialUrl = theUrlMatch.Groups[ 2 ].ToString();
                 Uri theVideoUrl = new Uri( "http://" + aUrl.Host + thePartialUrl );
-                mDownloadQuery.Add( theVideoUrl );
+
+                DownloadTag theTag;
+
+                Sites.YouTube.TryParse( ref theVideoUrl, out theTag );
+
+                if( !String.IsNullOrEmpty( theTag.Error ) )
+                {
+                    ShowStatus( theTag.Error );
+                    InputEnabled( true );
+                    return;
+                }
+
+                theTag.DownloadDestination = mPlaylistDestination + "\\" + FileUtils.FilenameCheck( theTag.VideoTitle ) + ".flv";
+
+                mDownloadQueue.Add( theTag );
 
                 theUrlMatch = theUrlMatch.NextMatch();
             }
 
             int theCurrentPageIndex = theSourceCode.IndexOf( "class=\"pagerCurrent\"" );
-            if( theCurrentPageIndex != -1 )
-            {
-                int theNextPageIndex = theSourceCode.LastIndexOf( "class=\"pagerNotCurrent\"" );
+            int theNextPageIndex = theSourceCode.LastIndexOf( "class=\"pagerNotCurrent\"" );
 
-                if( theNextPageIndex > theCurrentPageIndex )
-                {
-                    int theNextPageNumber = Convert.ToInt32( thePageNumber ) + 1;
-                    Uri theNextPage = new Uri( "http://www.youtube.com/view_play_list?p=" + thePlaylistId +
-                                               "&page=" + theNextPageNumber );
-                    DownloadYouTubePlaylist( ref theNextPage, theNextPageNumber );
-                    return;
-                }
-                else if( mDownloadQuery.Count != 0 )
-                {
-                    Uri theFirstUrl = mDownloadQuery[ 0 ];
-                    DownloadYouTubeVideo( ref theFirstUrl );
-                }
-            }
-            else
+            if( theCurrentPageIndex != -1 && theNextPageIndex > theCurrentPageIndex )
             {
-                if( mDownloadQuery.Count != 0 )
-                {
-                    Uri theFirstUrl = mDownloadQuery[ 0 ];
-                    DownloadYouTubeVideo( ref theFirstUrl );
-                }
+                int theNextPageNumber = Convert.ToInt32( thePageNumber ) + 1;
+                Uri theNextPage = new Uri( "http://www.youtube.com/view_play_list?p=" + thePlaylistId +
+                                           "&page=" + theNextPageNumber );
+                DownloadYouTubePlaylist( ref theNextPage, theNextPageNumber );
+                return;
+            }
+            else if( mDownloadQueue.Count != 0 )
+            {
+                DownloadFile( mDownloadQueue[ 0 ] );
             }
         }
 
@@ -555,7 +485,7 @@ namespace SaveMedia
 
             DownloadTag theTag;
 
-            Sites.YouTube.TryParse( aUrl, out theTag );
+            Sites.YouTube.TryParse( ref aUrl, out theTag );
 
             if( !String.IsNullOrEmpty( theTag.Error ) )
             {
@@ -567,16 +497,7 @@ namespace SaveMedia
             DownloadThumbnail( theTag.ThumbnailUrl );
             DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath;
-
-            if( !String.IsNullOrEmpty( mPlaylistDestination ) )
-            {
-                theFilePath = mPlaylistDestination + "\\" + Utilities.FilenameCheck( theTag.VideoTitle ) + ".flv";
-            }
-            else
-            {
-                theFilePath = Utilities.SaveFile( theTag.Filename, theTag.FileExtension, this );
-            }
+            String theFilePath = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension, this );
 
             DownloadFile( theTag.VideoUrl, theFilePath );
         }
@@ -584,117 +505,24 @@ namespace SaveMedia
         private void DownloadTudouVideo( ref Uri aUrl )
         {
             ShowStatus( "Connecting to " + aUrl.Host );
-            System.Windows.Forms.Application.UseWaitCursor = true;
 
-            String theVideoId = String.Empty;
+            DownloadTag theTag;
 
-            if( aUrl.OriginalString.ToLower().Contains( "iid=" ) )
+            Sites.Tudou.TryParse( ref aUrl, out theTag );
+
+            if( !String.IsNullOrEmpty( theTag.Error ) )
             {
-                // case 1 -> http://www.tudou.com/playlist/playindex.do?lid=3183353&iid=16030830
-                System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( aUrl.Query );
-                theVideoId = theQueryStrings[ "iid" ];
-            }
-            else
-            {
-                // case 2 -> http://www.tudou.com/programs/view/vjrv4umAuSk/
-
-                String theSourceCode;
-                if( !Utilities.DownloadString( aUrl, out theSourceCode ) )
-                {
-                    ShowStatus( "Failed to connect to " + aUrl.Host );
-                    InputEnabled( true );
-                    return;
-                }
-
-                if( !Utilities.StringBetween( theSourceCode, "iid=", "\"", out theVideoId ) )
-                {
-                    ShowStatus( "Failed to analyze video's URL" );
-                    InputEnabled( true );
-                    return;
-                }
-            }
-
-            System.Windows.Forms.Application.UseWaitCursor = false;
-
-            Uri theXmlUrl = new Uri( "http://" + aUrl.Host + "/player/v.php?id=" + theVideoId );
-            String theXmlSource = String.Empty;
-
-            if( !Utilities.DownloadString( theXmlUrl, out theXmlSource ) ||
-                theXmlSource.Equals( "0" ) )
-            {
-                ShowStatus( "Video is not found" );
+                ShowStatus( theTag.Error );
                 InputEnabled( true );
                 return;
             }
 
-            String theVideoTitle;
-            if( !Utilities.StringBetween( theXmlSource, "q='", "'", out theVideoTitle ) )
-            {
-                ShowStatus( "Failed to read video's title" );
-                InputEnabled( true );
-                return;
-            }
+            DownloadThumbnail( theTag.ThumbnailUrl );
+            DisplayMediaInfo( theTag.VideoTitle );
 
-            // this XML file provide the title as well, however the characters are encoded
-            // they show up as &#27931;&#22855; &#34909;&#25758;&#36305;&#20301;
-            theXmlUrl = new Uri( "http://v2.tudou.com/v2/cdn?id=" + theVideoId );
+            String theFilePath = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension, this );
 
-            if( !Utilities.DownloadString( theXmlUrl, out theXmlSource ) )
-            {
-                ShowStatus( "Video is not found" );
-                InputEnabled( true );
-                return;
-            }
-
-            // <v time="74000" vi="1" ch="10" nls="0" title="洛奇 衝撞跑位" code="vjrv4umAuSk" enable="1" logo="0" band="0"><a/><b><f w="10" h="0" sha1="5c7b142105e6db7dc7e342b65fda12413c0cb975" size="1736164">http://123.129.251.201/flv/014/770/632/14770632.flv?key=7b83d716aa9581bd59145e49e26fee2422d102</f></b></v>
-            String thePartialUrlString;
-            if( !Utilities.StringBetween( theXmlSource, "<f", "</f>", out thePartialUrlString ) )
-            {
-                ShowStatus( "Failed to read video's URL" );
-                InputEnabled( true );
-                return;
-            }
-
-            String theVideoUrlString = thePartialUrlString.Substring( thePartialUrlString.IndexOf( ">" ) + 1 );
-
-            // this part was required for AutoIt
-            //String theVideoFileSizeString;
-            //if( !Utilities.StringBetween( theXmlSource, "size=\"", "\"", out theVideoFileSizeString ) )
-            //{
-            //    ShowStatus( "Failed to read video's size" );
-            //    InputEnabled( true );
-            //    return;
-            //}
-
-            String theThumbnailUrlString;
-            if( !Utilities.StringBetween( thePartialUrlString, "/flv/", ".flv", out theThumbnailUrlString ) )
-            {
-                ShowStatus( "Failed to read video's URL" );
-                InputEnabled( true );
-                return;
-            }
-
-            int theLastSlashIndex = theThumbnailUrlString.LastIndexOf( "/" );
-            if( theLastSlashIndex == -1 )
-            {
-                ShowStatus( "Failed to read video's URL" );
-                InputEnabled( true );
-                return;
-            }
-
-            theThumbnailUrlString = "http://i01.img.tudou.com/data/imgs/i/" + theThumbnailUrlString.Remove( theLastSlashIndex );
-            theThumbnailUrlString += "/p.jpg";
-
-            Uri theThumbnailUrl = new Uri( theThumbnailUrlString );
-            Uri theVideoUrl     = new Uri( theVideoUrlString );
-
-            DownloadThumbnail( theThumbnailUrl );
-            DisplayMediaInfo( theVideoTitle );
-
-            String theFilename = theVideoTitle;
-            String theFilePath = Utilities.SaveFile( theFilename, "Flash Video (*.flv)|*.flv", this );
-
-            DownloadFile( theVideoUrl, theFilePath );
+            DownloadFile( theTag.VideoUrl, theFilePath );
         }
 
         private void DownloadNewgroundsVideo( ref Uri aUrl )
@@ -703,7 +531,7 @@ namespace SaveMedia
 
             DownloadTag theTag;
 
-            Sites.NewGrounds.TryParse( aUrl, out theTag );
+            Sites.NewGrounds.TryParse( ref aUrl, out theTag );
 
             if( !String.IsNullOrEmpty( theTag.Error ) )
             {
@@ -715,7 +543,7 @@ namespace SaveMedia
             DownloadThumbnail( theTag.ThumbnailUrl );
             DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = Utilities.SaveFile( theTag.Filename, theTag.FileExtension, this );
+            String theFilePath = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension, this );
 
             DownloadFile( theTag.VideoUrl, theFilePath );
         }
@@ -726,7 +554,7 @@ namespace SaveMedia
 
             DownloadTag theTag;
 
-            Sites.Vimeo.TryParse( aUrl, out theTag );
+            Sites.Vimeo.TryParse( ref aUrl, out theTag );
 
             if( !String.IsNullOrEmpty( theTag.Error ) )
             {
@@ -738,7 +566,7 @@ namespace SaveMedia
             DownloadThumbnail( theTag.ThumbnailUrl );
             DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = Utilities.SaveFile( theTag.Filename, theTag.FileExtension, this );
+            String theFilePath = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension, this );
 
             DownloadFile( theTag.VideoUrl, theFilePath );
         }
@@ -749,7 +577,7 @@ namespace SaveMedia
 
             DownloadTag theTag;
 
-            Sites.CollegeHumor.TryParse( aUrl, out theTag );
+            Sites.CollegeHumor.TryParse( ref aUrl, out theTag );
 
             if( !String.IsNullOrEmpty( theTag.Error ) )
             {
@@ -761,13 +589,18 @@ namespace SaveMedia
             DownloadThumbnail( theTag.ThumbnailUrl );
             DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = Utilities.SaveFile( theTag.Filename, theTag.FileExtension, this );
+            String theFilePath = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension, this );
 
             DownloadFile( theTag.VideoUrl, theFilePath );
         }
 
         private void DisplayMediaInfo( String aMediaTitle )
         {
+            if( String.IsNullOrEmpty( aMediaTitle ) )
+            {
+                return;
+            }
+
             mTitleLabel.Text = "Title: " + aMediaTitle.Replace( "\\", "" );
             mSizeLabel.Text = "Size: " + mFileSizeString;
 
@@ -781,9 +614,22 @@ namespace SaveMedia
 
         private void DownloadThumbnail( Uri aUrl )
         {
+            if( aUrl == null )
+            {
+                return;
+            }
+
             mThumbnailPath = System.IO.Path.GetTempFileName();
             mThumbnailClient.Headers.Add( "user-agent", SaveMedia.Program.UserAgent );
             mThumbnailClient.DownloadFileAsync( aUrl, mThumbnailPath );
+        }
+
+        private void DownloadFile( DownloadTag aTag )
+        {
+            DownloadThumbnail( aTag.ThumbnailUrl );
+            DisplayMediaInfo( aTag.VideoTitle );
+
+            DownloadFile( aTag.VideoUrl, aTag.DownloadDestination );
         }
 
         private void DownloadFile( Uri aUrl, String aDestination )
@@ -848,29 +694,30 @@ namespace SaveMedia
             {
                 if( mConversion.SelectedIndex != 0 )
                 {
-                    mConvertQuery.Add( mDownloadDestination );
+                    mConvertQueue.Add( mDownloadDestination );
                 }
 
-                if( mDownloadQuery.Count > 0 )
+                if( mDownloadQueue.Count > 0 )
                 {
-                    mDownloadQuery.RemoveAt( 0 );
+                    mDownloadQueue.RemoveAt( 0 );
                 }
 
-                if( mDownloadQuery.Count != 0 )
+                if( mDownloadQueue.Count != 0 )
                 {
-                    Uri theNextUrl = mDownloadQuery[ 0 ];
-                    UrlParser( ref theNextUrl );
+                    //Uri theNextUrl = mDownloadQueue[ 0 ];
+                    //UrlParser( ref theNextUrl );
+                    DownloadFile( mDownloadQueue[ 0 ] );
                 }
                 else
                 {
                     if( mConversion.SelectedIndex == 0 ||
-                        mConvertQuery.Count == 0 )
+                        mConvertQueue.Count == 0 )
                     {
                         ChangeLayout( "Download completed" );
                     }
                     else
                     {
-                        ConvertFile( mConvertQuery[ 0 ], mConvertQuery[ 0 ] );
+                        ConvertFile( mConvertQueue[ 0 ], mConvertQueue[ 0 ] );
                     }
                 }
             }
@@ -1090,10 +937,10 @@ namespace SaveMedia
 
             if( aIsEnabled )
             {
-                String theNewUrl = Utilities.ReadClipboardUrl();
+                String theNewUrl = ClipboardUtils.ReadClipboardUrl();
                 if( !mUrl.Text.Equals( theNewUrl ) && !String.IsNullOrEmpty( theNewUrl ) )
                 {
-                    mUrl.Text = Utilities.ReadClipboardUrl();
+                    mUrl.Text = ClipboardUtils.ReadClipboardUrl();
                 }
                 mUrl_TextChanged( this, new EventArgs() );
             }
@@ -1162,7 +1009,7 @@ namespace SaveMedia
 
             if( !this.ContainsFocus )
             {
-                FlashWindow.Flash( this );
+                FormUtils.FlashWindow( this );
             }
         }
 
@@ -1172,7 +1019,7 @@ namespace SaveMedia
             theForm.ShowDialog( this );
         }
 
-        private void optionsToolStripMenuItem_Click( object sender, EventArgs e )
+        private void mOptionsToolStripMenuItem_Click( object sender, EventArgs e )
         {
             System.Windows.Forms.Form theForm = new OptionsForm();
             theForm.ShowDialog( this );
@@ -1180,10 +1027,10 @@ namespace SaveMedia
 
         private void MainForm_Activated( object sender, EventArgs e )
         {
-            String theNewUrl = Utilities.ReadClipboardUrl();
+            String theNewUrl = ClipboardUtils.ReadClipboardUrl();
             if( mUrl.Enabled && !mUrl.Text.Equals( theNewUrl ) && !String.IsNullOrEmpty( theNewUrl ) )
             {
-                mUrl.Text = Utilities.ReadClipboardUrl();
+                mUrl.Text = theNewUrl;
             }
         }
     }

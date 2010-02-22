@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
+
+using Utility;
 
 namespace SaveMedia
 {
@@ -30,13 +27,13 @@ namespace SaveMedia
                 String theExtension;
                 Icon theIcon;
 
-                if( Utilities.StringBetween( theItem.ToString(), "(*", ")", out theExtension ) )
+                if( StringUtils.StringBetween( theItem.ToString(), "(*", ")", out theExtension ) )
                 {
-                    theIcon = Utilities.AssociatedIcon( theExtension );
+                    theIcon = ImageUtils.AssociatedIcon( theExtension );
                 }
                 else
                 {
-                    theIcon = Utilities.AssociatedIcon( ".tmp" );
+                    theIcon = ImageUtils.AssociatedIcon( ".tmp" );
                 }
 
                 mImageList.Images.Add( theIcon );
@@ -56,7 +53,7 @@ namespace SaveMedia
             Point thePoint = new Point( e.Bounds.Left, e.Bounds.Top + e.Bounds.Height / 2 );
 
             String theExtension;
-            if( Utilities.StringBetween( this.Items[ e.Index ].ToString(), "(*", ")", out theExtension ) )
+            if( StringUtils.StringBetween( this.Items[ e.Index ].ToString(), "(*", ")", out theExtension ) )
             {
                 e.Graphics.DrawImage( mImageList.Images[ e.Index ], e.Bounds.Left, e.Bounds.Top + 3 );
                 thePoint.X += mImageList.ImageSize.Width + 6;

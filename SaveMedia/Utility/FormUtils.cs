@@ -4,9 +4,9 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace SaveMedia
+namespace Utility
 {
-    public static class FlashWindow
+    public static class FormUtils
     {
         [DllImport( "user32.dll" )]
         [return: MarshalAs( UnmanagedType.Bool )]
@@ -63,7 +63,7 @@ namespace SaveMedia
         }
 
         // Flash the given Window until it receives focus.
-        public static bool Flash( System.Windows.Forms.Form form )
+        public static bool FlashWindow( System.Windows.Forms.Form form )
         {
             if( IsWin2kOrLater )
             {
