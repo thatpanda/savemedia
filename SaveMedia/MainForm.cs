@@ -356,6 +356,21 @@ namespace SaveMedia
                 int thePageNumber = 1;
                 DownloadYouTubePlaylist( ref aUrl, thePageNumber );
             }
+            else if( aUrl.OriginalString.StartsWith( "http://www.youtube.com/user/" ) )
+            {
+                int theLastSlashIndex = aUrl.OriginalString.LastIndexOf( "/" );
+
+                if( theLastSlashIndex == -1 )
+                {
+                    DownloadYouTubeVideo( ref aUrl );
+                }
+                else
+                {
+                    String thePlaylistId = aUrl.OriginalString.Substring( theLastSlashIndex + 1 );
+                    Uri thePlaylistUrl = new Uri( "http://www.youtube.com/view_play_list?p=" + thePlaylistId );
+                    YouTubeVideoParser( ref thePlaylistUrl );
+                }
+            }
             else if( aUrl.OriginalString.StartsWith( "http://www.youtube.com/v/" ) )
             {
                 String theNewUrlString = aUrl.OriginalString;
