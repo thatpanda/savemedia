@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Security;
+using System.Security.Permissions;
 
 namespace Utility
 {
@@ -26,19 +28,27 @@ namespace Utility
         public const uint SHGFI_SMALLICON = 0x1;            // get small icon
         public const uint SHGFI_USEFILEATTRIBUTES = 0x10;   // use passed dwFileAttribute
 
-        [DllImport( "shell32.dll" )]
-        public static extern IntPtr SHGetFileInfo( string pszPath,
-                                                   uint dwFileAttributes,
-                                                   ref SHFILEINFO psfi,
-                                                   uint cbSizeFileInfo,
-                                                   uint uFlags );
+        [SuppressUnmanagedCodeSecurityAttribute]
+        internal static class UnsafeNativeMethods
+        {
+            [DllImport( "shell32.dll", CharSet = CharSet.Unicode )]
+            internal static extern IntPtr SHGetFileInfo( string pszPath,
+                                                         uint dwFileAttributes,
+                                                         ref SHFILEINFO psfi,
+                                                         uint cbSizeFileInfo,
+                                                         uint uFlags );
+        }
+
+        
 
         public static System.Drawing.Icon AssociatedIcon( String aFilename )
         {
+            new UIPermission( UIPermissionWindow.AllWindows ).Demand();
+
             IntPtr hImg;
             SHFILEINFO theFileInfo = new SHFILEINFO();
 
-            hImg = SHGetFileInfo(
+            hImg = UnsafeNativeMethods.SHGetFileInfo(
                 aFilename,
                 FILE_ATTRIBUTE_NORMAL,
                 ref theFileInfo,

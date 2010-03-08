@@ -4,7 +4,7 @@ using Utility;
 
 namespace SaveMedia.Sites
 {
-    class CollegeHumor
+    static class CollegeHumor
     {
         public static void TryParse( ref Uri            aUrl,
                                      out DownloadTag    aTag )
@@ -58,7 +58,7 @@ namespace SaveMedia.Sites
             aTag.VideoTitle = theVideoTitle;
             aTag.VideoUrl = new Uri( theVideoUrlStr );
             aTag.ThumbnailUrl = new Uri( theThumbnailUrlStr );
-            aTag.Filename = aTag.VideoTitle;
+            aTag.FileName = aTag.VideoTitle;
             aTag.FileExtension = "Flash Video (*.flv)|*.flv";
         }
     }

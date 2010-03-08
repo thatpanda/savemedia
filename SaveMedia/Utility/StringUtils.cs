@@ -13,14 +13,14 @@ namespace Utility
                 return false;
             }
 
-            int theStartIndex = aSource.IndexOf( aStart );
+            int theStartIndex = aSource.IndexOf( aStart, StringComparison.Ordinal );
             if( theStartIndex == -1 )
             {
                 return false;
             }
             theStartIndex = theStartIndex + aStart.Length;
 
-            int theEndIndex = aSource.IndexOf( aEnd, theStartIndex );
+            int theEndIndex = aSource.IndexOf( aEnd, theStartIndex, StringComparison.Ordinal );
             if( theEndIndex == -1 )
             {
                 return false;

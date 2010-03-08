@@ -1,19 +1,20 @@
 ﻿// Ref:
 // http://pietschsoft.com/post/2009/01/CSharp-Flash-Window-in-Taskbar-via-Win32-FlashWindowEx.aspx
+// http://msdn.microsoft.com/en-us/library/ms182161.aspx
 
 using System;
 using System.Runtime.InteropServices;
+using System.Security;
+using System.Security.Permissions;
 
 namespace Utility
 {
+    [CLSCompliantAttribute( false )]
+
     public static class FormUtils
     {
-        [DllImport( "user32.dll" )]
-        [return: MarshalAs( UnmanagedType.Bool )]
-        private static extern bool FlashWindowEx( ref FLASHWINFO pwfi );
-
         [StructLayout( LayoutKind.Sequential )]
-        private struct FLASHWINFO
+        internal struct FlashInfo
         {
             // The size of the structure in bytes.
             public uint cbSize;
@@ -32,28 +33,36 @@ namespace Utility
             public uint dwTimeout;
         }
 
+        [SuppressUnmanagedCodeSecurityAttribute]
+        internal static class UnsafeNativeMethods
+        {
+            [DllImport( "user32.dll" )]
+            [return: MarshalAs( UnmanagedType.Bool )]
+            internal static extern bool FlashWindowEx( ref FlashInfo pwfi );
+        }
+
         // Stop flashing. The system restores the window to its original state.
-        public const uint FLASHW_STOP = 0;
+        public const uint StopFlashing = 0;
 
         // Flash the window caption.
-        public const uint FLASHW_CAPTION = 1;
+        public const uint FlashCaption = 1;
 
         // Flash the taskbar button.
-        public const uint FLASHW_TRAY = 2;
+        public const uint FlashTaskbar = 2;
 
         // Flash both the window caption and taskbar button.
-        // This is equivalent to setting the FLASHW_CAPTION | FLASHW_TRAY flags.
-        public const uint FLASHW_ALL = 3;
+        // This is equivalent to setting the FlashCaption | FlashTaskbar flags.
+        public const uint FlashAll = 3;
 
-        // Flash continuously, until the FLASHW_STOP flag is set.
-        public const uint FLASHW_TIMER = 4;
+        // Flash continuously, until the StopFlashing flag is set.
+        public const uint FlashUntilStopIsCalled = 4;
 
         // Flash continuously until the window comes to the foreground.
-        public const uint FLASHW_TIMERNOFG = 12;
+        public const uint FlashUntilWindowIsActive = 12;
 
-        private static FLASHWINFO Create_FLASHWINFO( IntPtr handle, uint flags, uint count, uint timeout )
+        private static FlashInfo CreateFlashInfo( IntPtr handle, uint flags, uint count, uint timeout )
         {
-            FLASHWINFO fi = new FLASHWINFO();
+            FlashInfo fi = new FlashInfo();
             fi.cbSize = Convert.ToUInt32( Marshal.SizeOf( fi ) );
             fi.hwnd = handle;
             fi.dwFlags = flags;
@@ -63,45 +72,49 @@ namespace Utility
         }
 
         // Flash the given Window until it receives focus.
-        public static bool FlashWindow( System.Windows.Forms.Form form )
+        public static bool FlashWindow( System.Windows.Forms.Form aForm )
         {
             if( IsWin2kOrLater )
             {
-                FLASHWINFO fi = Create_FLASHWINFO( form.Handle, FLASHW_ALL | FLASHW_TIMERNOFG, uint.MaxValue, 0 );
-                return FlashWindowEx( ref fi );
+                new UIPermission( UIPermissionWindow.AllWindows ).Demand();
+                FlashInfo fi = CreateFlashInfo( aForm.Handle, FlashAll | FlashUntilWindowIsActive, uint.MaxValue, 0 );
+                return UnsafeNativeMethods.FlashWindowEx( ref fi );
             }
             return false;
         }        
 
         // Flash the given Window for the specified number of times
-        public static bool Flash( System.Windows.Forms.Form form, uint count )
+        public static bool Flash( System.Windows.Forms.Form aForm, uint aCount )
         {
             if( IsWin2kOrLater )
             {
-                FLASHWINFO fi = Create_FLASHWINFO( form.Handle, FLASHW_ALL, count, 0 );
-                return FlashWindowEx( ref fi );
+                new UIPermission( UIPermissionWindow.AllWindows ).Demand();
+                FlashInfo fi = CreateFlashInfo( aForm.Handle, FlashAll, aCount, 0 );
+                return UnsafeNativeMethods.FlashWindowEx( ref fi );
             }
             return false;
         }
 
         // Start Flashing the given Window
-        public static bool Start( System.Windows.Forms.Form form )
+        public static bool Start( System.Windows.Forms.Form aForm )
         {
             if( IsWin2kOrLater )
             {
-                FLASHWINFO fi = Create_FLASHWINFO( form.Handle, FLASHW_ALL, uint.MaxValue, 0 );
-                return FlashWindowEx( ref fi );
+                new UIPermission( UIPermissionWindow.AllWindows ).Demand();
+                FlashInfo fi = CreateFlashInfo( aForm.Handle, FlashAll, uint.MaxValue, 0 );
+                return UnsafeNativeMethods.FlashWindowEx( ref fi );
             }
             return false;
         }
 
         // Stop Flashing the given Window
-        public static bool Stop( System.Windows.Forms.Form form )
+        public static bool Stop( System.Windows.Forms.Form aForm )
         {
             if( IsWin2kOrLater )
             {
-                FLASHWINFO fi = Create_FLASHWINFO( form.Handle, FLASHW_STOP, uint.MaxValue, 0 );
-                return FlashWindowEx( ref fi );
+                new UIPermission( UIPermissionWindow.AllWindows ).Demand();
+                FlashInfo fi = CreateFlashInfo( aForm.Handle, StopFlashing, uint.MaxValue, 0 );
+                return UnsafeNativeMethods.FlashWindowEx( ref fi );
             }
             return false;
         }

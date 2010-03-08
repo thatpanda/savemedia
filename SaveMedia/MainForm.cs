@@ -40,7 +40,6 @@ namespace SaveMedia
         private String  mPlaylistDestination;
 
         private int     mWaitingTime;
-        private String  mDelayDownloadDestination;
         private Timer   mDelayTimer;
 
         private System.Collections.Generic.List< DownloadTag > mDownloadQueue;
@@ -95,13 +94,6 @@ namespace SaveMedia
             mThumbnailClient.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
             mThumbnailClient.DownloadFileCompleted += new System.ComponentModel.AsyncCompletedEventHandler( ThumbnailDownloadCompleted );
 
-            mPlugin = null;
-
-            mDuration = 0;
-            mPercentage = 0;
-
-            mWaitingTime = 0;
-            mDelayDownloadDestination = String.Empty;
             mDelayTimer = new Timer();
             mDelayTimer.Interval = 1000;
             mDelayTimer.Tick += new EventHandler( mDelayTimer_Tick );
@@ -341,7 +333,7 @@ namespace SaveMedia
             mWaitingTime = theTag.WaitingTime;
             mDelayTimer.Start();
 
-            theTag.DownloadDestination = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension + "|*" + theTag.FileExtension, this );
+            theTag.DownloadDestination = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension + "|*" + theTag.FileExtension, this );
 
             if( String.IsNullOrEmpty( theTag.DownloadDestination ) )
             {
@@ -497,7 +489,7 @@ namespace SaveMedia
             DownloadThumbnail( theTag.ThumbnailUrl );
             DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension, this );
+            String theFilePath = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this );
 
             DownloadFile( theTag.VideoUrl, theFilePath );
         }
@@ -520,7 +512,7 @@ namespace SaveMedia
             DownloadThumbnail( theTag.ThumbnailUrl );
             DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension, this );
+            String theFilePath = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this );
 
             DownloadFile( theTag.VideoUrl, theFilePath );
         }
@@ -543,7 +535,7 @@ namespace SaveMedia
             DownloadThumbnail( theTag.ThumbnailUrl );
             DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension, this );
+            String theFilePath = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this );
 
             DownloadFile( theTag.VideoUrl, theFilePath );
         }
@@ -566,7 +558,7 @@ namespace SaveMedia
             DownloadThumbnail( theTag.ThumbnailUrl );
             DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension, this );
+            String theFilePath = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this );
 
             DownloadFile( theTag.VideoUrl, theFilePath );
         }
@@ -589,7 +581,7 @@ namespace SaveMedia
             DownloadThumbnail( theTag.ThumbnailUrl );
             DisplayMediaInfo( theTag.VideoTitle );
 
-            String theFilePath = FileUtils.SaveFile( theTag.Filename, theTag.FileExtension, this );
+            String theFilePath = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this );
 
             DownloadFile( theTag.VideoUrl, theFilePath );
         }
@@ -976,26 +968,11 @@ namespace SaveMedia
             ClearTemporaryFiles();
         }
 
-        private void DeleteFile( String aFilePath )
-        {
-            if( !String.IsNullOrEmpty( aFilePath ) )
-            {
-                try
-                {
-                    System.IO.File.Delete( aFilePath );
-                }
-                catch( System.Exception /*ex*/ )
-                {
-                    // TODO: write error to log
-                }
-            }
-        }
-
         private void ClearTemporaryFiles()
         {
-            DeleteFile( mThumbnailPath );
-            DeleteFile( mConversionTempInPath );
-            DeleteFile( mConversionTempOutPath );
+            FileUtils.DeleteFile( mThumbnailPath );
+            FileUtils.DeleteFile( mConversionTempInPath );
+            FileUtils.DeleteFile( mConversionTempOutPath );
         }
 
         private void NotifyUser()

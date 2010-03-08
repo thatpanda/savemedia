@@ -4,7 +4,7 @@ using Utility;
 
 namespace SaveMedia.Sites
 {
-    class Vimeo
+    static class Vimeo
     {
         public static void TryParse( ref Uri            aUrl,
                                      out DownloadTag    aTag )
@@ -65,7 +65,7 @@ namespace SaveMedia.Sites
             aTag.VideoTitle = theVideoTitle;
             aTag.VideoUrl = new Uri( "http://vimeo.com/moogaloop/play/clip:" + theVideoId + "/" + theRequestSignature + "/" + theRequestSignatureExpires + "/?q=sd&type=local" );
             aTag.ThumbnailUrl = new Uri( theThumbnailUrlStr );
-            aTag.Filename = aTag.VideoTitle;
+            aTag.FileName = aTag.VideoTitle;
             aTag.FileExtension = "Flash Video (*.flv)|*.flv";
         }
     }

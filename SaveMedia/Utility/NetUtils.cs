@@ -4,8 +4,7 @@ namespace Utility
 {
     static class NetUtils
     {
-        private static System.Net.WebClient                         mSourceCodeClient;
-        private static System.Net.DownloadStringCompletedEventArgs  mSourceCodeEvent;
+        private static System.Net.WebClient mWebClient;
 
         public static bool DownloadString( Uri aUrl, out String aResult )
         {
@@ -13,26 +12,24 @@ namespace Utility
 
             bool isSuccess = false;
             aResult = String.Empty;
-            mSourceCodeEvent = null;
 
-            if( mSourceCodeClient == null )
+            if( mWebClient == null )
             {
-                mSourceCodeClient = new System.Net.WebClient();
-                //mSourceCodeClient.CachePolicy = new System.Net.Cache.RequestCachePolicy( System.Net.Cache.RequestCacheLevel.Revalidate );
-                mSourceCodeClient.Encoding = System.Text.Encoding.UTF8;
-                mSourceCodeClient.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
-                mSourceCodeClient.DownloadStringCompleted += new System.Net.DownloadStringCompletedEventHandler( DownloadSourceCodeCompleted );
+                mWebClient = new System.Net.WebClient();
+                //mWebClient.CachePolicy = new System.Net.Cache.RequestCachePolicy( System.Net.Cache.RequestCacheLevel.Revalidate );
+                mWebClient.Encoding = System.Text.Encoding.UTF8;
+                mWebClient.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
             }
 
-            while( mSourceCodeClient.IsBusy )
+            while( mWebClient.IsBusy )
             {
                 System.Windows.Forms.Application.DoEvents();
             }
 
             try
             {
-                mSourceCodeClient.Headers.Add( "user-agent", SaveMedia.Program.UserAgent );
-                aResult = mSourceCodeClient.DownloadString( aUrl );
+                mWebClient.Headers.Add( "user-agent", SaveMedia.Program.UserAgent );
+                aResult = mWebClient.DownloadString( aUrl );
                 isSuccess = true;
             }
             catch( System.Net.WebException e )
@@ -44,28 +41,9 @@ namespace Utility
                 aResult = e.Message;
             }
 
-            //if( mSourceCodeEvent != null )
-            //{
-            //    if( mSourceCodeEvent.Error != null )
-            //    {
-            //        aResult = mSourceCodeEvent.Error.Message;
-            //    }
-            //    else
-            //    {
-            //        aResult = mSourceCodeEvent.Result;
-            //        aResult = System.Web.HttpUtility.HtmlDecode( aResult );
-            //        isSuccess = true;
-            //    }
-            //}
-
             System.Windows.Forms.Application.UseWaitCursor = false;
 
             return isSuccess;
-        }
-
-        private static void DownloadSourceCodeCompleted( object sender, System.Net.DownloadStringCompletedEventArgs e )
-        {
-            mSourceCodeEvent = e;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace SaveMedia.Sites
 {
-    class Brightcove
+    static class Brightcove
     {
         public static void TryParse( ref Uri    aUrl,
                                      out String aVideoTitle,

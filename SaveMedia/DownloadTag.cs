@@ -7,17 +7,10 @@ namespace SaveMedia
         public DownloadTag()
         {
             mVideoTitle = String.Empty;
-            mVideoUrl = null;
 
-            mThumbnailUrl = null;
-
-            mDefaultFilename = String.Empty;
+            mDefaultFileName = String.Empty;
             mFileExtension = String.Empty;
             mDownloadDestination = String.Empty;
-
-            mWaitingTime = 0;
-
-            mError = String.Empty;
         }
 
         public String VideoTitle
@@ -38,10 +31,10 @@ namespace SaveMedia
             set { mThumbnailUrl = value; }
         }
 
-        public String Filename
+        public String FileName
         {
-            get { return mDefaultFilename; }
-            set { mDefaultFilename = value; }
+            get { return mDefaultFileName; }
+            set { mDefaultFileName = value; }
         }
 
         public String FileExtension
@@ -73,7 +66,7 @@ namespace SaveMedia
 
         private Uri     mThumbnailUrl;
 
-        private String  mDefaultFilename;
+        private String  mDefaultFileName;
         private String  mFileExtension;
         private String  mDownloadDestination;
 

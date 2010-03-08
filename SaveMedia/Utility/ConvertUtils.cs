@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace Utility
 {
@@ -9,7 +10,7 @@ namespace Utility
             String theHexString = String.Empty;
             foreach( byte theByte in aBytes )
             {
-                theHexString += theByte.ToString( "X2" );
+                theHexString += theByte.ToString( "X2", CultureInfo.InvariantCulture );
             }
 
             return theHexString;
@@ -28,7 +29,7 @@ namespace Utility
                  theArrayIndex += 1, theHexIndex += 2 )
             {
                 String theHexString = aHex.Substring( theHexIndex, 2 );
-                uint theDecimal = uint.Parse( theHexString, System.Globalization.NumberStyles.HexNumber );
+                uint theDecimal = uint.Parse( theHexString, NumberStyles.HexNumber, CultureInfo.InvariantCulture );
                 char theChar = System.Convert.ToChar( theDecimal );
                 Bytes[ theArrayIndex ] = System.Convert.ToByte( theChar );
             }
@@ -42,7 +43,7 @@ namespace Utility
             foreach( char theChar in aAscii )
             {
                 uint theDecimal = System.Convert.ToUInt32( theChar );
-                theHexString += theDecimal.ToString( "X2" );
+                theHexString += theDecimal.ToString( "X2", CultureInfo.InvariantCulture );
             }
             return theHexString;
         }
@@ -58,9 +59,9 @@ namespace Utility
             for( int theIndex = 0; theIndex <= aHex.Length - 2; theIndex += 2 )
             {
                 String theHexString = aHex.Substring( theIndex, 2 );
-                uint theDecimal = uint.Parse( theHexString, System.Globalization.NumberStyles.HexNumber );
+                uint theDecimal = uint.Parse( theHexString, NumberStyles.HexNumber, CultureInfo.InvariantCulture );
                 char theChar = System.Convert.ToChar( theDecimal );
-                theAsciiString += theChar.ToString();
+                theAsciiString += theChar.ToString( CultureInfo.InvariantCulture );
             }
 
             return theAsciiString;

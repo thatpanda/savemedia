@@ -62,7 +62,7 @@ namespace SaveMedia.Sites
                                        "&t=" + theToken +
                                        theQuality );
             aTag.ThumbnailUrl = new Uri( "http://img.youtube.com/vi/" + theVideoId + "/default.jpg" );
-            aTag.Filename = aTag.VideoTitle;
+            aTag.FileName = aTag.VideoTitle;
             aTag.FileExtension = "Flash Video (*.flv)|*.flv";
         }
 

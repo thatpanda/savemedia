@@ -34,6 +34,21 @@ namespace Utility
             return aFilename;
         }
 
+        public static void DeleteFile( String aFilePath )
+        {
+            if( !String.IsNullOrEmpty( aFilePath ) )
+            {
+                try
+                {
+                    System.IO.File.Delete( aFilePath );
+                }
+                catch( System.Exception /*ex*/ )
+                {
+                    // TODO: write error to log
+                }
+            }
+        }
+
         public static String SaveFile( String aFilename, String aFilter, System.Windows.Forms.Form aOwner )
         {
             aFilename = FilenameCheck( aFilename );

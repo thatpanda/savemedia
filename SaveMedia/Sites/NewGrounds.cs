@@ -42,7 +42,7 @@ namespace SaveMedia.Sites
             aTag.VideoTitle = Uri.UnescapeDataString( theVideoTitle );
             aTag.ThumbnailUrl = new Uri( theThumbnailUrlStr );
             aTag.VideoUrl = new Uri( theVideoUrlStr );
-            aTag.Filename = aTag.VideoTitle;
+            aTag.FileName = aTag.VideoTitle;
             aTag.FileExtension = "Flash Movie (*.swf)|*.swf";
         }
     }

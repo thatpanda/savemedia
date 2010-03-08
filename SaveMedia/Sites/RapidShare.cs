@@ -17,7 +17,7 @@ namespace SaveMedia.Sites
             //aTag.VideoUrl = new Uri( "http://www.youtube.com/get_video?" +
             //                           "video_id=" + theVideoId );
             //aTag.ThumbnailUrl = new Uri( "http://img.youtube.com/vi/" + theVideoId + "/default.jpg" );
-            //aTag.Filename = aTag.VideoTitle;
+            //aTag.FileName = aTag.VideoTitle;
             //aTag.FileExtension = "Flash Video (*.flv)|*.flv";
 
             if( aUrl.Host.StartsWith( "www" ) )
@@ -99,7 +99,7 @@ namespace SaveMedia.Sites
 
             aTag.VideoUrl = theDownloadUrl;
             aTag.WaitingTime = theWaitingTime;
-            aTag.Filename = System.IO.Path.GetFileName( theDownloadUrl.OriginalString );
+            aTag.FileName = System.IO.Path.GetFileName( theDownloadUrl.OriginalString );
             aTag.FileExtension = System.IO.Path.GetExtension( theDownloadUrl.OriginalString );
         }
     }

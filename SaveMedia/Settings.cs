@@ -4,7 +4,7 @@ using Utility;
 
 namespace SaveMedia
 {
-    class Settings
+    static class Settings
     {
         private const String gcSettingsFilename = "Settings.xml";
         private static System.Collections.Generic.Dictionary< String, String > mSettings;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 using Utility;
 
@@ -13,7 +14,7 @@ namespace SaveMedia.Sites
 
             String theVideoId = String.Empty;
 
-            if( aUrl.OriginalString.ToLower().Contains( "iid=" ) )
+            if( aUrl.OriginalString.ToLower( CultureInfo.CurrentCulture ).Contains( "iid=" ) )
             {
                 // case 1 -> http://www.tudou.com/playlist/playindex.do?lid=3183353&iid=16030830
                 System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( aUrl.Query );
@@ -103,7 +104,7 @@ namespace SaveMedia.Sites
             aTag.VideoTitle = theVideoTitle;
             aTag.VideoUrl = new Uri( theVideoUrlString );
             aTag.ThumbnailUrl = new Uri( theThumbnailUrlString );
-            aTag.Filename = aTag.VideoTitle;
+            aTag.FileName = aTag.VideoTitle;
             aTag.FileExtension = "Flash Video (*.flv)|*.flv";
         }
     }
