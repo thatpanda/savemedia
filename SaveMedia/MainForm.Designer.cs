@@ -50,6 +50,7 @@
             this.mMenuStrip = new System.Windows.Forms.MenuStrip();
             this.mOptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mAboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mQualityLabel = new System.Windows.Forms.Label();
             mMainLayout = new System.Windows.Forms.FlowLayoutPanel();
             theMediaInfoLayout = new System.Windows.Forms.TableLayoutPanel();
             theMediaInfoLayout2 = new System.Windows.Forms.FlowLayoutPanel();
@@ -179,11 +180,12 @@
             theMediaInfoLayout2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             theMediaInfoLayout2.Controls.Add( this.mTitleLabel );
             theMediaInfoLayout2.Controls.Add( this.mSizeLabel );
+            theMediaInfoLayout2.Controls.Add( this.mQualityLabel );
             theMediaInfoLayout2.Controls.Add( this.mLocationLabel );
             theMediaInfoLayout2.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            theMediaInfoLayout2.Location = new System.Drawing.Point( 129, 19 );
+            theMediaInfoLayout2.Location = new System.Drawing.Point( 129, 10 );
             theMediaInfoLayout2.Name = "theMediaInfoLayout2";
-            theMediaInfoLayout2.Size = new System.Drawing.Size( 57, 57 );
+            theMediaInfoLayout2.Size = new System.Drawing.Size( 57, 76 );
             theMediaInfoLayout2.TabIndex = 1;
             theMediaInfoLayout2.WrapContents = false;
             // 
@@ -210,7 +212,7 @@
             // mLocationLabel
             // 
             this.mLocationLabel.AutoSize = true;
-            this.mLocationLabel.Location = new System.Drawing.Point( 3, 44 );
+            this.mLocationLabel.Location = new System.Drawing.Point( 3, 63 );
             this.mLocationLabel.Margin = new System.Windows.Forms.Padding( 3, 6, 3, 0 );
             this.mLocationLabel.Name = "mLocationLabel";
             this.mLocationLabel.Size = new System.Drawing.Size( 51, 13 );
@@ -326,6 +328,16 @@
             this.mAboutToolStripMenuItem.Text = "&About";
             this.mAboutToolStripMenuItem.Click += new System.EventHandler( this.mAboutToolStripMenuItem_Click );
             // 
+            // mQualityLabel
+            // 
+            this.mQualityLabel.AutoSize = true;
+            this.mQualityLabel.Location = new System.Drawing.Point( 3, 44 );
+            this.mQualityLabel.Margin = new System.Windows.Forms.Padding( 3, 6, 3, 0 );
+            this.mQualityLabel.Name = "mQualityLabel";
+            this.mQualityLabel.Size = new System.Drawing.Size( 42, 13 );
+            this.mQualityLabel.TabIndex = 3;
+            this.mQualityLabel.Text = "Quality:";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF( 6F, 13F );
@@ -383,6 +395,7 @@
         private System.Windows.Forms.Button mCancelButton;
         private System.Windows.Forms.Label mLocationLabel;
         private System.Windows.Forms.ToolStripMenuItem mOptionsToolStripMenuItem;
+        private System.Windows.Forms.Label mQualityLabel;
     }
 }
 

@@ -277,7 +277,7 @@
             theFFmpegLink.Size = new System.Drawing.Size( 100, 13 );
             theFFmpegLink.TabIndex = 13;
             theFFmpegLink.TabStop = true;
-            theFFmpegLink.Text = "r20267, 2009-10-18";
+            theFFmpegLink.Text = "r22426, 2010-03-10";
             theFFmpegLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler( this.theFFmpegLink_LinkClicked );
             // 
             // theVimeoLink
@@ -342,7 +342,7 @@
             // 
             // theLogo
             // 
-            this.theLogo.Image = ( (System.Drawing.Image)( resources.GetObject( "theLogo.Image" ) ) );
+            this.theLogo.Image = global::SaveMedia.Properties.Resources.SaveMedia;
             this.theLogo.Location = new System.Drawing.Point( 3, 3 );
             this.theLogo.Name = "theLogo";
             this.theLogo.Size = new System.Drawing.Size( 48, 48 );

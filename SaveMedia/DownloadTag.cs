@@ -25,6 +25,12 @@ namespace SaveMedia
             set { mVideoUrl = value; }
         }
 
+        public String Quality
+        {
+            get { return mQuality; }
+            set { mQuality = value; }
+        }
+
         public Uri ThumbnailUrl
         {
             get { return mThumbnailUrl; }
@@ -63,6 +69,7 @@ namespace SaveMedia
 
         private String  mVideoTitle;
         private Uri     mVideoUrl;
+        private String  mQuality;
 
         private Uri     mThumbnailUrl;
 

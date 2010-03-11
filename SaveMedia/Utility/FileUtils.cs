@@ -36,7 +36,8 @@ namespace Utility
 
         public static void DeleteFile( String aFilePath )
         {
-            if( !String.IsNullOrEmpty( aFilePath ) )
+            if( !String.IsNullOrEmpty( aFilePath ) &&
+                System.IO.File.Exists( aFilePath ) )
             {
                 try
                 {
@@ -128,12 +129,20 @@ namespace Utility
             {
                 theWriter = new System.Xml.XmlTextWriter( aFilePath, System.Text.Encoding.UTF8 );
 
+                theWriter.Formatting = System.Xml.Formatting.Indented;
+
+                theWriter.WriteStartDocument();
+                theWriter.WriteStartElement( "SaveMedia" );
+
                 foreach( System.Collections.Generic.KeyValuePair< String, String > thePair in aNodes )
                 {
                     theWriter.WriteStartElement( thePair.Key );
                     theWriter.WriteString( thePair.Value );
                     theWriter.WriteEndElement();
                 }
+
+                theWriter.WriteEndElement();
+                theWriter.WriteEndDocument();
             }
             catch
             {

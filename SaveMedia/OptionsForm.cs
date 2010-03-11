@@ -15,21 +15,43 @@ namespace SaveMedia
         {
             InitializeComponent();
 
-            String theYouTubeQuality = Settings.YouTubeQuality();
-
-            switch( theYouTubeQuality )
+            switch( Settings.CheckForUpdates() )
             {
-                case "6":
-                    mFmt6.Checked = true;
+                case "auto":
+                    mAutoUpdate.Checked = true;
+                    break;
+                case "when fails":
+                    mUpdateWhenFails.Checked = true;
+                    break;
+                case "never":
+                    mNeverUpdate.Checked = true;
+                    break;
+                default:
+                    mAutoUpdate.Checked = true;
+                    HandleCheckForUpdatesChanged( mAutoUpdate, EventArgs.Empty );
+                    break;
+            }
+
+            switch( Settings.YouTubeQuality() )
+            {
+                case "34":
+                    mNormalQuality.Checked = true;
                     break;
                 case "18":
                     mFmt18.Checked = true;
                     break;
+                case "35":
+                    mFmt35.Checked = true;
+                    break;
                 case "22":
                     mFmt22.Checked = true;
                     break;
+                case "37":
+                    mFmt37.Checked = true;
+                    break;
                 default:
                     mNormalQuality.Checked = true;
+                    HandleYoutubeQualityChanged( mNormalQuality, EventArgs.Empty );
                     break;
             }
         }
@@ -39,24 +61,24 @@ namespace SaveMedia
             Settings.Save();
         }
 
-        private void HandleQualitySettingsChanged( object sender, EventArgs e )
+        private void HandleCheckForUpdatesChanged( object sender, EventArgs e )
         {
-            String theValue = "0";
+            RadioButton theButton = (RadioButton)sender;
 
-            if( mFmt6.Checked )
+            if( theButton.Checked )
             {
-                theValue = "6";
+                Settings.CheckForUpdates( theButton.Tag.ToString() );
             }
-            else if( mFmt18.Checked )
-            {
-                theValue = "18";
-            }
-            else if( mFmt22.Checked )
-            {
-                theValue = "22";
-            }
+        }
 
-            Settings.YouTubeQuality( ref theValue );
+        private void HandleYoutubeQualityChanged( object sender, EventArgs e )
+        {
+            RadioButton theButton = (RadioButton) sender;
+
+            if( theButton.Checked )
+            {
+                Settings.YouTubeQuality( theButton.Tag.ToString() );
+            }
         }
     }
 }

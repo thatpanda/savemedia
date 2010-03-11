@@ -54,19 +54,20 @@ namespace SaveMedia.Sites
             //String theFmtMap     = theQueryStrings[ "fmt_map" ];
 
             String thePreferedQuality = Settings.YouTubeQuality();
-            String theQuality = YouTubeAvailableQuality( theFmtMap, thePreferedQuality );
+            String theFmtArg = AvailableQuality( theFmtMap, thePreferedQuality );
 
             aTag.VideoTitle = theVideoTitle;
             aTag.VideoUrl = new Uri( "http://www.youtube.com/get_video?" +
                                        "video_id=" + theVideoId +
                                        "&t=" + theToken +
-                                       theQuality );
+                                       theFmtArg );
+            aTag.Quality = QualityStr( theFmtArg );
             aTag.ThumbnailUrl = new Uri( "http://img.youtube.com/vi/" + theVideoId + "/default.jpg" );
             aTag.FileName = aTag.VideoTitle;
             aTag.FileExtension = "Flash Video (*.flv)|*.flv";
         }
 
-        public static String YouTubeAvailableQuality( String aFmtMap, String aPreferedQuality )
+        public static String AvailableQuality( String aFmtMap, String aPreferedQuality )
         {
             if( String.IsNullOrEmpty( aFmtMap ) ||
                 String.IsNullOrEmpty( aPreferedQuality ) )
@@ -90,20 +91,59 @@ namespace SaveMedia.Sites
             {
                 return "&fmt=" + aPreferedQuality;
             }
-            else if( thePreferedQuality > 22 && aFmtMap.IndexOf( ",22/" ) != -1 )
+            else if( aFmtMap.IndexOf( ",22/" ) != -1 &&
+                     thePreferedQuality != 35 &&
+                     thePreferedQuality != 18 &&
+                     thePreferedQuality != 34 )
             {
                 return "&fmt=22";
             }
-            else if( thePreferedQuality > 18 && aFmtMap.IndexOf( ",18/" ) != -1 )
+            else if( aFmtMap.IndexOf( ",35/" ) != -1 &&
+                     thePreferedQuality != 18 &&
+                     thePreferedQuality != 34 )
+            {
+                return "&fmt=35";
+            }
+            else if( aFmtMap.IndexOf( ",6/" ) != -1 &&
+                     thePreferedQuality != 18 &&
+                     thePreferedQuality != 34 )
+            {
+                return "&fmt=6";    // fmt 6 should be replaced by 35
+            }
+            else if( aFmtMap.IndexOf( ",18/" ) != -1 &&
+                     thePreferedQuality != 34 )
             {
                 return "&fmt=18";
             }
-            else if( thePreferedQuality > 6 && aFmtMap.IndexOf( ",6/" ) != -1 )
+            else if( aFmtMap.IndexOf( ",34/" ) != -1 )
             {
-                return "&fmt=6";
+                return "&fmt=34";
             }
 
             return String.Empty;
+        }
+
+        public static String QualityStr( String aFmtArg )
+        {
+            if( String.IsNullOrEmpty( aFmtArg ) )
+            {
+                return String.Empty;
+            }
+
+            switch( aFmtArg )
+            {
+                case "&fmt=37":
+                    return "HD (1080p)";
+                case "&fmt=22":
+                    return "HD (720p)";
+                case "&fmt=35":
+                case "&fmt=6":
+                    return "HQ";
+                case "&fmt=18":
+                    return "iPod";
+                default:
+                    return "Standard";
+            }
         }
     }
 }

@@ -47,6 +47,7 @@ namespace SaveMedia
 
         delegate void ChangeLayoutCallBack( String aPhase );
         delegate void NotifyUserCallBack();
+        delegate DialogResult PromptForUpdateCallBack();
 
         public MainForm()
         {
@@ -100,6 +101,19 @@ namespace SaveMedia
 
             mDownloadQueue = new List< DownloadTag >();
             mConvertQueue = new List< String >();
+
+            UpdateUtils.StartupCheckIfNeeded( this );
+        }
+
+        public DialogResult PromptForUpdate()
+        {
+            if( this.InvokeRequired )
+            {
+                PromptForUpdateCallBack theCallBack = new PromptForUpdateCallBack( PromptForUpdate );
+                return (DialogResult) this.Invoke( theCallBack );
+            }
+
+            return MessageBox.Show( this, "A newer version of SaveMedia is available.\n\nWould you like to download now?", "Updates", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1 );
         }
 
         private void mDelayTimer_Tick( object sender, EventArgs e )
@@ -174,46 +188,69 @@ namespace SaveMedia
 
         private void UrlParser( ref Uri aUrl )
         {
-            if( aUrl.OriginalString.StartsWith( "http://www.youtube.com" ) )
+            if( aUrl.OriginalString.StartsWith( "http://" ) )
             {
-                YouTubeVideoParser( ref aUrl );
-            }
-            else if( aUrl.OriginalString.StartsWith( "http://www.tudou.com" ) )
-            {
-                DownloadTudouVideo( ref aUrl );
-            }
-            else if( aUrl.OriginalString.StartsWith( "http://www.newgrounds.com" ) )
-            {
-                DownloadNewgroundsVideo( ref aUrl );
-            }
-            else if( aUrl.OriginalString.StartsWith( "http://vimeo.com" ) )
-            {
-                DownloadVimeoVideo( ref aUrl );
-            }
-            else if( aUrl.OriginalString.StartsWith( "http://www.collegehumor.com" ) )
-            {
-                DownloadCollegeHumorVideo( ref aUrl );
-            }
-            else if( aUrl.OriginalString.StartsWith( "http://link.brightcove.com" ) )
-            {
-                //DownloadBrightcoveVideo( ref theUrl );
-                mStatus.Text = "Sorry, this site is not supported yet";
-                InputEnabled( true );
-                return;
-            }
-            else if( aUrl.Host.EndsWith( ".rapidshare.com" ) )
-            {
-                DownloadRapidShareFile( ref aUrl );
-            }
-            else if( aUrl.OriginalString.StartsWith( "http://" ) )
-            {
-                String theFilename = System.IO.Path.GetFileName( aUrl.OriginalString );
-                theFilename = FileUtils.FilenameCheck( theFilename );
+                if( aUrl.OriginalString.StartsWith( "http://www.youtube.com" ) )
+                {
+                    YouTubeVideoParser( ref aUrl );
+                }
+                else if( aUrl.Host.EndsWith( ".rapidshare.com" ) )
+                {
+                    DownloadRapidShareFile( ref aUrl );
+                }
+                else
+                {
+                    ShowStatus( "Connecting to " + aUrl.Host );
 
-                String theFileExt = System.IO.Path.GetExtension( aUrl.OriginalString );
-                String theFilePath = FileUtils.SaveFile( theFilename, theFileExt + "|*" + theFileExt, this );
+                    DownloadTag theTag;
 
-                DownloadFile( aUrl, theFilePath );
+                    if( aUrl.OriginalString.StartsWith( "http://www.tudou.com" ) )
+                    {
+                        Sites.Tudou.TryParse( ref aUrl, out theTag );
+                    }
+                    else if( aUrl.OriginalString.StartsWith( "http://www.newgrounds.com" ) )
+                    {
+                        Sites.NewGrounds.TryParse( ref aUrl, out theTag );
+                    }
+                    else if( aUrl.OriginalString.StartsWith( "http://vimeo.com" ) )
+                    {
+                        Sites.Vimeo.TryParse( ref aUrl, out theTag );
+                    }
+                    else if( aUrl.OriginalString.StartsWith( "http://www.collegehumor.com" ) )
+                    {
+                        Sites.CollegeHumor.TryParse( ref aUrl, out theTag );
+                    }
+                    else if( aUrl.OriginalString.StartsWith( "http://link.brightcove.com" ) )
+                    {
+                        //DownloadBrightcoveVideo( ref theUrl );
+                        mStatus.Text = "Sorry, this site is not supported yet";
+                        InputEnabled( true );
+                        return;
+                    }
+                    else
+                    {
+                        String theFilename = System.IO.Path.GetFileName( aUrl.OriginalString );
+                        theFilename = FileUtils.FilenameCheck( theFilename );
+
+                        String theFileExt = System.IO.Path.GetExtension( aUrl.OriginalString );
+                        String theFilePath = FileUtils.SaveFile( theFilename, theFileExt + "|*" + theFileExt, this );
+
+                        DownloadFile( aUrl, theFilePath );
+                        return;
+                    }
+
+                    if( !String.IsNullOrEmpty( theTag.Error ) )
+                    {
+                        ShowStatus( theTag.Error );
+                        InputEnabled( true );
+                        return;
+                    }
+
+                    DownloadThumbnail( theTag.ThumbnailUrl );
+                    DisplayMediaInfo( theTag );
+
+                    DownloadFile( theTag.VideoUrl, FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this ) );
+                }
             }
             else
             {
@@ -502,114 +539,31 @@ namespace SaveMedia
             }
 
             DownloadThumbnail( theTag.ThumbnailUrl );
-            DisplayMediaInfo( theTag.VideoTitle );
+            DisplayMediaInfo( theTag );
 
             String theFilePath = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this );
 
             DownloadFile( theTag.VideoUrl, theFilePath );
         }
 
-        private void DownloadTudouVideo( ref Uri aUrl )
+        private void DisplayMediaInfo( DownloadTag aTag )
         {
-            ShowStatus( "Connecting to " + aUrl.Host );
-
-            DownloadTag theTag;
-
-            Sites.Tudou.TryParse( ref aUrl, out theTag );
-
-            if( !String.IsNullOrEmpty( theTag.Error ) )
-            {
-                ShowStatus( theTag.Error );
-                InputEnabled( true );
-                return;
-            }
-
-            DownloadThumbnail( theTag.ThumbnailUrl );
-            DisplayMediaInfo( theTag.VideoTitle );
-
-            String theFilePath = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this );
-
-            DownloadFile( theTag.VideoUrl, theFilePath );
-        }
-
-        private void DownloadNewgroundsVideo( ref Uri aUrl )
-        {
-            ShowStatus( "Connecting to " + aUrl.Host );
-
-            DownloadTag theTag;
-
-            Sites.NewGrounds.TryParse( ref aUrl, out theTag );
-
-            if( !String.IsNullOrEmpty( theTag.Error ) )
-            {
-                ShowStatus( theTag.Error );
-                InputEnabled( true );
-                return;
-            }
-
-            DownloadThumbnail( theTag.ThumbnailUrl );
-            DisplayMediaInfo( theTag.VideoTitle );
-
-            String theFilePath = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this );
-
-            DownloadFile( theTag.VideoUrl, theFilePath );
-        }
-
-        private void DownloadVimeoVideo( ref Uri aUrl )
-        {
-            ShowStatus( "Connecting to " + aUrl.Host );
-
-            DownloadTag theTag;
-
-            Sites.Vimeo.TryParse( ref aUrl, out theTag );
-
-            if( !String.IsNullOrEmpty( theTag.Error ) )
-            {
-                ShowStatus( theTag.Error );
-                InputEnabled( true );
-                return;
-            }
-
-            DownloadThumbnail( theTag.ThumbnailUrl );
-            DisplayMediaInfo( theTag.VideoTitle );
-
-            String theFilePath = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this );
-
-            DownloadFile( theTag.VideoUrl, theFilePath );
-        }
-
-        private void DownloadCollegeHumorVideo( ref Uri aUrl )
-        {
-            ShowStatus( "Connecting to " + aUrl.Host );
-
-            DownloadTag theTag;
-
-            Sites.CollegeHumor.TryParse( ref aUrl, out theTag );
-
-            if( !String.IsNullOrEmpty( theTag.Error ) )
-            {
-                ShowStatus( theTag.Error );
-                InputEnabled( true );
-                return;
-            }
-
-            DownloadThumbnail( theTag.ThumbnailUrl );
-            DisplayMediaInfo( theTag.VideoTitle );
-
-            String theFilePath = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension, this );
-
-            DownloadFile( theTag.VideoUrl, theFilePath );
-        }
-
-        private void DisplayMediaInfo( String aMediaTitle )
-        {
-            if( String.IsNullOrEmpty( aMediaTitle ) )
+            if( String.IsNullOrEmpty( aTag.VideoTitle ) )
             {
                 return;
             }
 
-            mTitleLabel.Text = "Title: " + aMediaTitle.Replace( "\\", "" );
-            mSizeLabel.Text = "Size: " + mFileSizeString;
+            mTitleLabel.Text = "Title: " + aTag.VideoTitle.Replace( "\\", "" );
+            mSizeLabel.Text = "Size: ??? MB";
+
+            if( String.IsNullOrEmpty( aTag.Quality ) )
+            {
+                mQualityLabel.Text = String.Empty;
+            }
+            else
+            {
+                mQualityLabel.Text = "Quality: " + aTag.Quality;
+            }
 
             mLocationLabel.Text = String.Empty;
             
@@ -634,7 +588,7 @@ namespace SaveMedia
         private void DownloadFile( DownloadTag aTag )
         {
             DownloadThumbnail( aTag.ThumbnailUrl );
-            DisplayMediaInfo( aTag.VideoTitle );
+            DisplayMediaInfo( aTag );
 
             DownloadFile( aTag.VideoUrl, aTag.DownloadDestination );
         }
@@ -968,6 +922,7 @@ namespace SaveMedia
             mUrlGroupBox.Visible = !aIsVisible;
             mConversionGroupBox.Visible = !aIsVisible;
             mMediaInfoGroupBox.Visible = aIsVisible;
+            mThumbnail.Image = mThumbnail.InitialImage;
             this.ResumeLayout( false );
             this.PerformLayout();
         }

@@ -113,6 +113,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="app.config" />
     <None Include="Properties\Settings.settings">
@@ -138,6 +139,7 @@
     <Compile Include="Utility\ImageUtils.cs" />
     <Compile Include="Utility\NetUtils.cs" />
     <Compile Include="Utility\StringUtils.cs" />
+    <Compile Include="Utility\UpdateUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -174,6 +176,7 @@
   <ItemGroup>
     <Content Include="Resources\SaveMedia.ico" />
     <Content Include="Resources\SaveMedia.png" />
+    <None Include="Resources\Youtube48x48.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
