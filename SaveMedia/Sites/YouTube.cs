@@ -26,21 +26,28 @@ namespace SaveMedia.Sites
             }
 
             String theVideoId;
-            if( !StringUtils.StringBetween( theSourceCode, "\"video_id\": \"", "\"", out theVideoId ) )
+            if( !StringUtils.StringBetween( theSourceCode, "&video_id=", "&", out theVideoId ) )
             {
                 aTag.Error = "Failed to extract video's id";
                 return;
             }
 
+            Uri theXmlUrl = new Uri( "http://www.youtube.com/get_video_info?&video_id=" + theVideoId );
+            if( !NetUtils.DownloadString( theXmlUrl, out theSourceCode ) )
+            {
+                aTag.Error = "Failed to receive video's info";
+                return;
+            }
+
             String theToken;
-            if( !StringUtils.StringBetween( theSourceCode, "\"t\": \"", "\"", out theToken ) )
+            if( !StringUtils.StringBetween( theSourceCode, "&token=", "&", out theToken ) )
             {
                 aTag.Error = "Failed to extract token";
                 return;
             }
 
             String theFmtMap;
-            if( !StringUtils.StringBetween( theSourceCode, "\"fmt_map\": \"", "\"", out theFmtMap ) )
+            if( !StringUtils.StringBetween( theSourceCode, "&fmt_list=", "&", out theFmtMap ) )
             {
                 aTag.Error = "Failed to extract video's fmt map";
                 return;
