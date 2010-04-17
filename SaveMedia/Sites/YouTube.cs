@@ -32,15 +32,15 @@ namespace SaveMedia.Sites
                 return;
             }
 
-            Uri theXmlUrl = new Uri( "http://www.youtube.com/get_video_info?&video_id=" + theVideoId );
-            if( !NetUtils.DownloadString( theXmlUrl, out theSourceCode ) )
-            {
-                aTag.Error = "Failed to receive video's info";
-                return;
-            }
+            //Uri theXmlUrl = new Uri( "http://www.youtube.com/get_video_info?&video_id=" + theVideoId );
+            //if( !NetUtils.DownloadString( theXmlUrl, out theSourceCode ) )
+            //{
+            //    aTag.Error = "Failed to receive video's info";
+            //    return;
+            //}
 
             String theToken;
-            if( !StringUtils.StringBetween( theSourceCode, "&token=", "&", out theToken ) )
+            if( !StringUtils.StringBetween( theSourceCode, "&t=", "&", out theToken ) )
             {
                 aTag.Error = "Failed to extract token";
                 return;
