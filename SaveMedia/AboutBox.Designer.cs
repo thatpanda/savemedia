@@ -183,6 +183,7 @@
             // 
             theTudouLink.AutoSize = true;
             theTableLayout2.SetColumnSpan( theTudouLink, 2 );
+            theTudouLink.Font = new System.Drawing.Font( "Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Strikeout, System.Drawing.GraphicsUnit.Point, ( (byte)( 0 ) ) );
             theTudouLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
             theTudouLink.Location = new System.Drawing.Point( 12, 192 );
             theTudouLink.Margin = new System.Windows.Forms.Padding( 12, 0, 3, 0 );
