@@ -16,7 +16,8 @@ namespace SaveMedia
     public partial class MainForm : Form
     {
         private const String gcFFmpegPath = "Plugin\\bin\\ffmpeg.exe";
-        private const double gcOneMB = 1024*1024;
+        private const double gcOneKB = 1024;
+        private const double gcOneMB = gcOneKB * 1024;
 
         private System.Net.WebClient mWebClient;
         private System.Net.WebClient mThumbnailClient;
@@ -33,6 +34,7 @@ namespace SaveMedia
         private long    mFileSize;
         private double  mFileSizeInMB;
         private String  mFileSizeString;
+        private double  mBytesReceived;
 
         private double  mDuration;
         private int     mPercentage;
@@ -569,8 +571,6 @@ namespace SaveMedia
             
             ShowStatus( "Ready to download" );
             MediaInfoVisible( true );
-
-            System.Windows.Forms.Application.DoEvents();
         }
 
         private void DownloadThumbnail( Uri aUrl )
@@ -626,19 +626,25 @@ namespace SaveMedia
                 mFileSize = e.TotalBytesToReceive;
                 mFileSizeInMB = mFileSize;
                 mFileSizeInMB /= gcOneMB;
-                mFileSizeString = mFileSizeInMB.ToString( "0.000" ) + " MB";
+                mFileSizeString = mFileSizeInMB.ToString( "0.00" ) + " MB";
                 mSizeLabel.Text = "Size: " + mFileSizeString;
+                mBytesReceived = 0;
             }
 
-            this.Text = e.ProgressPercentage + "% - " + mDefaultTitle;
-            mProgressBar.Value = e.ProgressPercentage;
+            if( ( e.BytesReceived - mBytesReceived ) / ( 20 * gcOneKB ) >= 1 )
+            {
+                mBytesReceived = e.BytesReceived;
 
-            double theReceivedFileSizeInMB = e.BytesReceived;
-            theReceivedFileSizeInMB /= gcOneMB;
-            ShowStatus( "Downloading..." +
-                        theReceivedFileSizeInMB.ToString( "0.000" ) +
-                        "/" +
-                        mFileSizeString );
+                this.Text = e.ProgressPercentage + "% - " + mDefaultTitle;
+                mProgressBar.Value = e.ProgressPercentage;
+
+                double theReceivedFileSizeInMB = e.BytesReceived;
+                theReceivedFileSizeInMB /= gcOneMB;
+                ShowStatus( "Downloading..." +
+                            theReceivedFileSizeInMB.ToString( "0.00" ) +
+                            "/" +
+                            mFileSizeString );
+            }
         }
 
         private void DownloadCompleted( object sender, System.ComponentModel.AsyncCompletedEventArgs e )
@@ -930,7 +936,6 @@ namespace SaveMedia
         private void ShowStatus( String aMessage )
         {
             mStatus.Text = aMessage;
-            System.Windows.Forms.Application.DoEvents();
         }
 
         private void MainForm_FormClosed( object sender, FormClosedEventArgs e )
