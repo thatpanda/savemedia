@@ -53,6 +53,47 @@ namespace SaveMedia.Sites
                 return;
             }
 
+            String thePreferedQuality = Settings.YouTubeQuality();
+            String theAvailableFmt = AvailableQuality( theFmtMap, thePreferedQuality );
+
+            String theFmtStreamMap;
+            if( !StringUtils.StringBetween( theSourceCode, "&fmt_stream_map=", "&", out theFmtStreamMap ) )
+            {
+                aTag.Error = "Failed to extract video's fmt stream map";
+                return;
+            }
+            theFmtStreamMap = System.Web.HttpUtility.UrlDecode( theFmtStreamMap );
+
+            String[] theUrls = theFmtStreamMap.Split( ',' );
+            if( theUrls.Length == 0 )
+            {
+                aTag.Error = "Failed to split video's URLs";
+                return;
+            }
+
+            String theUrl;
+            if( !StringUtils.StringBetween( theUrls[ 0 ], "|", "||", out theUrl ) )
+            {
+                aTag.Error = "Failed to extract video's URL";
+                return;
+            }
+
+            if( !System.String.IsNullOrEmpty( theAvailableFmt ) )
+            {
+                foreach( System.String theLink in theUrls )
+                {
+                    if( theLink.StartsWith( theAvailableFmt + "|" ) )
+                    {
+                        if( !StringUtils.StringBetween( theLink, "|", "||", out theUrl ) )
+                        {
+                            aTag.Error = "Failed to extract video's URL";
+                            return;
+                        }
+                        break;
+                    }
+                }
+            }
+
             //System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( theFullScreenUrl.Query );
 
             //String theVideoTitle = theQueryStrings[ "title" ];
@@ -60,15 +101,9 @@ namespace SaveMedia.Sites
             //String theToken      = theQueryStrings[ "t" ];
             //String theFmtMap     = theQueryStrings[ "fmt_map" ];
 
-            String thePreferedQuality = Settings.YouTubeQuality();
-            String theFmtArg = AvailableQuality( theFmtMap, thePreferedQuality );
-
             aTag.VideoTitle = theVideoTitle;
-            aTag.VideoUrl = new Uri( "http://www.youtube.com/get_video?" +
-                                       "video_id=" + theVideoId +
-                                       "&t=" + theToken +
-                                       theFmtArg );
-            aTag.Quality = QualityStr( theFmtArg );
+            aTag.VideoUrl = new Uri( theUrl );
+            aTag.Quality = QualityStr( theAvailableFmt );
             aTag.ThumbnailUrl = new Uri( "http://img.youtube.com/vi/" + theVideoId + "/default.jpg" );
             aTag.FileName = aTag.VideoTitle;
             aTag.FileExtension = "Flash Video (*.flv)|*.flv";
@@ -96,35 +131,35 @@ namespace SaveMedia.Sites
 
             if( aFmtMap.IndexOf( "," + aPreferedQuality + "/" ) != -1 )
             {
-                return "&fmt=" + aPreferedQuality;
+                return aPreferedQuality;
             }
             else if( aFmtMap.IndexOf( ",22/" ) != -1 &&
                      thePreferedQuality != 35 &&
                      thePreferedQuality != 18 &&
                      thePreferedQuality != 34 )
             {
-                return "&fmt=22";
+                return "22";
             }
             else if( aFmtMap.IndexOf( ",35/" ) != -1 &&
                      thePreferedQuality != 18 &&
                      thePreferedQuality != 34 )
             {
-                return "&fmt=35";
+                return "35";
             }
             else if( aFmtMap.IndexOf( ",6/" ) != -1 &&
                      thePreferedQuality != 18 &&
                      thePreferedQuality != 34 )
             {
-                return "&fmt=6";    // fmt 6 should be replaced by 35
+                return "6";    // fmt 6 should be replaced by 35
             }
             else if( aFmtMap.IndexOf( ",18/" ) != -1 &&
                      thePreferedQuality != 34 )
             {
-                return "&fmt=18";
+                return "18";
             }
             else if( aFmtMap.IndexOf( ",34/" ) != -1 )
             {
-                return "&fmt=34";
+                return "34";
             }
 
             return String.Empty;
@@ -139,14 +174,14 @@ namespace SaveMedia.Sites
 
             switch( aFmtArg )
             {
-                case "&fmt=37":
+                case "37":
                     return "HD (1080p)";
-                case "&fmt=22":
+                case "22":
                     return "HD (720p)";
-                case "&fmt=35":
-                case "&fmt=6":
+                case "35":
+                case "6":
                     return "HQ";
-                case "&fmt=18":
+                case "18":
                     return "iPod";
                 default:
                     return "Standard";
