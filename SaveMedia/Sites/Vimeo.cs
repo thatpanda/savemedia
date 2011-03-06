@@ -19,18 +19,22 @@ namespace SaveMedia.Sites
             }
 
             String theVideoId;
-            if( !StringUtils.StringBetween( theSourceCode, "http://vimeo.com/moogaloop.swf?clip_id=", "\"", out theVideoId ) )
+            if( !StringUtils.StringBetween( theSourceCode, "property=\"og:url\" content=\"http://vimeo.com/", "\"", out theVideoId ) &&
+                !StringUtils.StringBetween( theSourceCode, "clipid=", ";", out theVideoId )  )
             {
                 aTag.Error = "Failed to read video's ID";
                 return;
             }
 
+            //"thumbnail":"http:\/\/b.vimeocdn.com\/ts\/131\/533\/131533953_640.jpg"
             String theThumbnailUrlStr;
-            if( !StringUtils.StringBetween( theSourceCode, "<link rel=\"videothumbnail\" href=\"", "\"", out theThumbnailUrlStr ) )
+            if( !StringUtils.StringBetween( theSourceCode, "\"thumbnail\":\"", "\"", out theThumbnailUrlStr ) )
             {
                 aTag.Error = "Failed to read video's thumbnail";
                 return;
             }
+
+            theThumbnailUrlStr = theThumbnailUrlStr.Replace( "\\", "" );
 
             Uri theXmlUrl = new Uri( "http://vimeo.com/moogaloop/load/clip:" + theVideoId + "/local?param_clip_id=" + theVideoId );
 

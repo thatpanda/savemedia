@@ -214,7 +214,8 @@ namespace SaveMedia
                     {
                         Sites.NewGrounds.TryParse( ref aUrl, out theTag );
                     }
-                    else if( aUrl.OriginalString.StartsWith( "http://vimeo.com" ) )
+                    else if( aUrl.OriginalString.StartsWith( "http://vimeo.com" ) ||
+                             aUrl.OriginalString.StartsWith( "http://www.vimeo.com" ) )
                     {
                         Sites.Vimeo.TryParse( ref aUrl, out theTag );
                     }

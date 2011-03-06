@@ -26,7 +26,8 @@ namespace SaveMedia.Sites
             }
 
             String theVideoId;
-            if( !StringUtils.StringBetween( theSourceCode, "&video_id=", "&", out theVideoId ) )
+            if( !StringUtils.StringBetween( theSourceCode, "&video_id=", "&", out theVideoId ) &&
+                !StringUtils.StringBetween( theSourceCode, "&amp;video_id=", "&amp;", out theVideoId ) )
             {
                 aTag.Error = "Failed to extract video's id";
                 return;
@@ -40,14 +41,16 @@ namespace SaveMedia.Sites
             //}
 
             String theToken;
-            if( !StringUtils.StringBetween( theSourceCode, "&t=", "&", out theToken ) )
+            if( !StringUtils.StringBetween( theSourceCode, "&t=", "&", out theToken ) &&
+                !StringUtils.StringBetween( theSourceCode, "&amp;t=", "&amp;", out theToken ) )
             {
                 aTag.Error = "Failed to extract token";
                 return;
             }
 
             String theFmtMap;
-            if( !StringUtils.StringBetween( theSourceCode, "&fmt_list=", "&", out theFmtMap ) )
+            if( !StringUtils.StringBetween( theSourceCode, "&fmt_list=", "&", out theFmtMap ) &&
+                !StringUtils.StringBetween( theSourceCode, "&amp;fmt_list=", "&amp;", out theFmtMap ) )
             {
                 aTag.Error = "Failed to extract video's fmt map";
                 return;
@@ -57,7 +60,8 @@ namespace SaveMedia.Sites
             String theAvailableFmt = AvailableQuality( theFmtMap, thePreferedQuality );
 
             String theFmtStreamMap;
-            if( !StringUtils.StringBetween( theSourceCode, "&fmt_stream_map=", "&", out theFmtStreamMap ) )
+            if( !StringUtils.StringBetween( theSourceCode, "&fmt_stream_map=", "&", out theFmtStreamMap ) &&
+                !StringUtils.StringBetween( theSourceCode, "&amp;fmt_stream_map=", "&amp;", out theFmtStreamMap ) )
             {
                 aTag.Error = "Failed to extract video's fmt stream map";
                 return;

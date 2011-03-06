@@ -278,7 +278,7 @@
             theFFmpegLink.Size = new System.Drawing.Size( 100, 13 );
             theFFmpegLink.TabIndex = 13;
             theFFmpegLink.TabStop = true;
-            theFFmpegLink.Text = "r22426, 2010-03-10";
+            theFFmpegLink.Text = "r27778, 2011-03-04";
             theFFmpegLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler( this.theFFmpegLink_LinkClicked );
             // 
             // theVimeoLink

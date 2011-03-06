@@ -33,7 +33,7 @@ namespace SaveMedia
 
         private void theFFmpegLink_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
         {
-            System.Diagnostics.Process.Start( "http://ffmpeg.arrozcru.org/autobuilds/" );
+            System.Diagnostics.Process.Start( "http://blog.k-tai-douga.com/" );
         }
 
         private void theCollegeHumorLink_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )

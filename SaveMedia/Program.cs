@@ -9,12 +9,12 @@ namespace SaveMedia
         public const String Description     = "";           // Comments
         public const String Product         = "SaveMedia";  // Product Name
         public const String Company         = "";
-        public const String Copyright       = "© 2010 Eric Choy";
+        public const String Copyright       = "© 2011 Eric Choy";
         public const String AssemblyVersion = "1.0.0.0";
-        public const String FileVersion     = "1.7.3.0";
-        public const String TitleVersion    = "1.7.3";
-        public const String Date            = "August 18th, 2010";
-        public const String UserAgent       = "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.2.8) Gecko/20100722 BTRS86393 Firefox/3.6.8 ( .NET CLR 3.5.30729; .NET4.0C)";
+        public const String FileVersion     = "1.7.4.0";
+        public const String TitleVersion    = "1.7.4";
+        public const String Date            = "March 5th, 2011";
+        public const String UserAgent       = "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.15) Gecko/20110303 Firefox/3.6.15 (.NET CLR 3.5.30729)";
 
         /// <summary>
         /// The main entry point for the application.
