@@ -41,6 +41,7 @@
             this.mThumbnail = new System.Windows.Forms.PictureBox();
             this.mTitleLabel = new System.Windows.Forms.Label();
             this.mSizeLabel = new System.Windows.Forms.Label();
+            this.mQualityLabel = new System.Windows.Forms.Label();
             this.mLocationLabel = new System.Windows.Forms.Label();
             this.mProgressBar = new System.Windows.Forms.ProgressBar();
             this.mStatus = new System.Windows.Forms.Label();
@@ -50,7 +51,6 @@
             this.mMenuStrip = new System.Windows.Forms.MenuStrip();
             this.mOptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mAboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.mQualityLabel = new System.Windows.Forms.Label();
             mMainLayout = new System.Windows.Forms.FlowLayoutPanel();
             theMediaInfoLayout = new System.Windows.Forms.TableLayoutPanel();
             theMediaInfoLayout2 = new System.Windows.Forms.FlowLayoutPanel();
@@ -169,7 +169,7 @@
             this.mThumbnail.MaximumSize = new System.Drawing.Size( 400, 300 );
             this.mThumbnail.Name = "mThumbnail";
             this.mThumbnail.Size = new System.Drawing.Size( 120, 90 );
-            this.mThumbnail.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.mThumbnail.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.mThumbnail.TabIndex = 0;
             this.mThumbnail.TabStop = false;
             // 
@@ -208,6 +208,16 @@
             this.mSizeLabel.Size = new System.Drawing.Size( 30, 13 );
             this.mSizeLabel.TabIndex = 1;
             this.mSizeLabel.Text = "Size:";
+            // 
+            // mQualityLabel
+            // 
+            this.mQualityLabel.AutoSize = true;
+            this.mQualityLabel.Location = new System.Drawing.Point( 3, 44 );
+            this.mQualityLabel.Margin = new System.Windows.Forms.Padding( 3, 6, 3, 0 );
+            this.mQualityLabel.Name = "mQualityLabel";
+            this.mQualityLabel.Size = new System.Drawing.Size( 42, 13 );
+            this.mQualityLabel.TabIndex = 3;
+            this.mQualityLabel.Text = "Quality:";
             // 
             // mLocationLabel
             // 
@@ -327,16 +337,6 @@
             this.mAboutToolStripMenuItem.Size = new System.Drawing.Size( 52, 20 );
             this.mAboutToolStripMenuItem.Text = "&About";
             this.mAboutToolStripMenuItem.Click += new System.EventHandler( this.mAboutToolStripMenuItem_Click );
-            // 
-            // mQualityLabel
-            // 
-            this.mQualityLabel.AutoSize = true;
-            this.mQualityLabel.Location = new System.Drawing.Point( 3, 44 );
-            this.mQualityLabel.Margin = new System.Windows.Forms.Padding( 3, 6, 3, 0 );
-            this.mQualityLabel.Name = "mQualityLabel";
-            this.mQualityLabel.Size = new System.Drawing.Size( 42, 13 );
-            this.mQualityLabel.TabIndex = 3;
-            this.mQualityLabel.Text = "Quality:";
             // 
             // MainForm
             // 
