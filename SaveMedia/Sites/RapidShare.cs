@@ -49,58 +49,58 @@ namespace SaveMedia.Sites
                 return;
             }
 
-            HttpWebRequest theRequest = (HttpWebRequest)WebRequest.Create( aUrl );
-            theRequest.UserAgent = SaveMedia.Program.UserAgent;
-            theRequest.Referer = aUrl.OriginalString;
-            theRequest.Method = "POST";
-            theRequest.ContentType = "application/x-www-form-urlencoded";
-            theRequest.Credentials = CredentialCache.DefaultCredentials;
+            //HttpWebRequest theRequest = (HttpWebRequest)WebRequest.Create( aUrl );
+            //theRequest.UserAgent = SaveMedia.Program.UserAgent;
+            //theRequest.Referer = aUrl.OriginalString;
+            //theRequest.Method = "POST";
+            //theRequest.ContentType = "application/x-www-form-urlencoded";
+            //theRequest.Credentials = CredentialCache.DefaultCredentials;
 
-            String thePostData = "dl.start=Free";
-            theRequest.ContentLength = thePostData.Length;
+            //String thePostData = "dl.start=Free";
+            //theRequest.ContentLength = thePostData.Length;
 
-            System.IO.Stream theRequestStream = theRequest.GetRequestStream();
-            System.IO.StreamWriter theStreamWriter = new System.IO.StreamWriter( theRequestStream );
-            theStreamWriter.Write( thePostData );
-            theStreamWriter.Close();
+            //System.IO.Stream theRequestStream = theRequest.GetRequestStream();
+            //System.IO.StreamWriter theStreamWriter = new System.IO.StreamWriter( theRequestStream );
+            //theStreamWriter.Write( thePostData );
+            //theStreamWriter.Close();
 
-            HttpWebResponse theResponse = (HttpWebResponse)theRequest.GetResponse();
-            System.IO.Stream theResponseStream = theResponse.GetResponseStream();
-            System.IO.StreamReader theStreamReader = new System.IO.StreamReader( theResponseStream );
+            //HttpWebResponse theResponse = (HttpWebResponse)theRequest.GetResponse();
+            //System.IO.Stream theResponseStream = theResponse.GetResponseStream();
+            //System.IO.StreamReader theStreamReader = new System.IO.StreamReader( theResponseStream );
 
-            String theSourceCode = theStreamReader.ReadToEnd();
-            theStreamReader.Close();
-            theResponseStream.Close();
-            theResponse.Close();
+            //String theSourceCode = theStreamReader.ReadToEnd();
+            //theStreamReader.Close();
+            //theResponseStream.Close();
+            //theResponse.Close();
 
-            String theFirstMirror;
-            if( !StringUtils.StringBetween( theSourceCode, "<form name=\"dlf\" action=\"", "\"", out theFirstMirror ) )
-            {
-                aTag.Error = "Failed to extract mirror's URL";
-                return;
-            }
+            //String theFirstMirror;
+            //if( !StringUtils.StringBetween( theSourceCode, "<form name=\"dlf\" action=\"", "\"", out theFirstMirror ) )
+            //{
+            //    aTag.Error = "Failed to extract mirror's URL";
+            //    return;
+            //}
 
-            Uri theDownloadUrl;
-            bool isValid = Uri.TryCreate( theFirstMirror, UriKind.Absolute, out theDownloadUrl );
-            if( !isValid )
-            {
-                aTag.Error = "Unknown URL";
-                return;
-            }
+            //Uri theDownloadUrl;
+            //bool isValid = Uri.TryCreate( theFirstMirror, UriKind.Absolute, out theDownloadUrl );
+            //if( !isValid )
+            //{
+            //    aTag.Error = "Unknown URL";
+            //    return;
+            //}
 
-            String theWaitingTimeStr;
-            int theWaitingTime;
-            if( !StringUtils.StringBetween( theSourceCode, "var c=", ";", out theWaitingTimeStr ) ||
-                !int.TryParse( theWaitingTimeStr, out theWaitingTime ) )
-            {
-                aTag.Error = "Failed to extract waiting time";
-                return;
-            }
+            //String theWaitingTimeStr;
+            //int theWaitingTime;
+            //if( !StringUtils.StringBetween( theSourceCode, "var c=", ";", out theWaitingTimeStr ) ||
+            //    !int.TryParse( theWaitingTimeStr, out theWaitingTime ) )
+            //{
+            //    aTag.Error = "Failed to extract waiting time";
+            //    return;
+            //}
 
-            aTag.VideoUrl = theDownloadUrl;
-            aTag.WaitingTime = theWaitingTime;
-            aTag.FileName = System.IO.Path.GetFileName( theDownloadUrl.OriginalString );
-            aTag.FileExtension = System.IO.Path.GetExtension( theDownloadUrl.OriginalString );
+            //aTag.VideoUrl = theDownloadUrl;
+            //aTag.WaitingTime = theWaitingTime;
+            //aTag.FileName = System.IO.Path.GetFileName( theDownloadUrl.OriginalString );
+            //aTag.FileExtension = System.IO.Path.GetExtension( theDownloadUrl.OriginalString );
         }
     }
 }

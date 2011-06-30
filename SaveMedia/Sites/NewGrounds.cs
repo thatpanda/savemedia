@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Utility;
 
@@ -6,44 +7,48 @@ namespace SaveMedia.Sites
 {
     static class NewGrounds
     {
-        public static void TryParse( ref Uri            aUrl,
-                                     out DownloadTag    aTag )
+        public static void TryParse( ref Uri aUrl,
+                                     ref List<DownloadTag> aDownloadQueue,
+                                     out String aError )
         {
-            aTag = new DownloadTag();
+            aError = String.Empty;
 
             String theSourceCode;
             if( !NetUtils.DownloadString( aUrl, out theSourceCode ) )
             {
-                aTag.Error = "Failed to connect to " + aUrl.Host;
+                aError = "Failed to connect to " + aUrl.Host;
                 return;
             }
 
             String theVideoTitle;
             if( !StringUtils.StringBetween( theSourceCode, "<title>", "</title>", out theVideoTitle ) )
             {
-                aTag.Error = "Failed to read video's title";
+                aError = "Failed to read video's title";
                 return;
             }
 
             String theVideoUrlStr;
             if( !StringUtils.StringBetween( theSourceCode, "var fw = new FlashWriter(\"", "\"", out theVideoUrlStr ) )
             {
-                aTag.Error = "Failed to read video's URL";
+                aError = "Failed to read video's URL";
                 return;
             }
 
             String theThumbnailUrlStr;
             if( !StringUtils.StringBetween( theSourceCode, "<link rel=\"image_src\" href=\"", "\"", out theThumbnailUrlStr ) )
             {
-                aTag.Error = "Failed to read video's thumbnail";
+                aError = "Failed to read video's thumbnail";
                 return;
             }
 
-            aTag.VideoTitle = Uri.UnescapeDataString( theVideoTitle );
-            aTag.ThumbnailUrl = new Uri( theThumbnailUrlStr );
-            aTag.VideoUrl = new Uri( theVideoUrlStr );
-            aTag.FileName = aTag.VideoTitle;
-            aTag.FileExtension = "Flash Movie (*.swf)|*.swf";
+            DownloadTag theTag = new DownloadTag();
+            theTag.VideoTitle = Uri.UnescapeDataString( theVideoTitle );
+            theTag.ThumbnailUrl = new Uri( theThumbnailUrlStr );
+            theTag.VideoUrl = new Uri( theVideoUrlStr );
+            theTag.FileName = theTag.VideoTitle;
+            theTag.FileExtension = "Flash Movie (*.swf)|*.swf";
+
+            aDownloadQueue.Add( theTag );
         }
     }
 }

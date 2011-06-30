@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 using Utility;
@@ -7,10 +8,11 @@ namespace SaveMedia.Sites
 {
     static class Tudou
     {
-        public static void TryParse( ref Uri            aUrl,
-                                     out DownloadTag    aTag )
+        public static void TryParse( ref Uri aUrl,
+                                     ref List<DownloadTag> aDownloadQueue,
+                                     out String aError )
         {
-            aTag = new DownloadTag();
+            aError = String.Empty;
 
             String theVideoId = String.Empty;
 
@@ -27,13 +29,13 @@ namespace SaveMedia.Sites
                 String theSourceCode;
                 if( !NetUtils.DownloadString( aUrl, out theSourceCode ) )
                 {
-                    aTag.Error = "Failed to connect to " + aUrl.Host;
+                    aError = "Failed to connect to " + aUrl.Host;
                     return;
                 }
 
                 if( !StringUtils.StringBetween( theSourceCode, "iid=", "\"", out theVideoId ) )
                 {
-                    aTag.Error = "Failed to analyze video's URL";
+                    aError = "Failed to analyze video's URL";
                     return;
                 }
             }
@@ -44,14 +46,14 @@ namespace SaveMedia.Sites
             if( !NetUtils.DownloadString( theXmlUrl, out theXmlSource ) ||
                 theXmlSource.Equals( "0" ) )
             {
-                aTag.Error = "Video is not found";
+                aError = "Video is not found";
                 return;
             }
 
             String theVideoTitle;
             if( !StringUtils.StringBetween( theXmlSource, "q='", "'", out theVideoTitle ) )
             {
-                aTag.Error = "Failed to read video's title";
+                aError = "Failed to read video's title";
                 return;
             }
 
@@ -61,7 +63,7 @@ namespace SaveMedia.Sites
 
             if( !NetUtils.DownloadString( theXmlUrl, out theXmlSource ) )
             {
-                aTag.Error = "Video is not found";
+                aError = "Video is not found";
                 return;
             }
 
@@ -69,7 +71,7 @@ namespace SaveMedia.Sites
             String thePartialUrlString;
             if( !StringUtils.StringBetween( theXmlSource, "<f", "</f>", out thePartialUrlString ) )
             {
-                aTag.Error = "Failed to read video's URL";
+                aError = "Failed to read video's URL";
                 return;
             }
 
@@ -79,7 +81,7 @@ namespace SaveMedia.Sites
             //String theVideoFileSizeString;
             //if( !StringUtils.StringBetween( theXmlSource, "size=\"", "\"", out theVideoFileSizeString ) )
             //{
-            //    aTag.Error = "Failed to read video's size";
+            //    aError = "Failed to read video's size";
             //    InputEnabled( true );
             //    return;
             //}
@@ -87,25 +89,28 @@ namespace SaveMedia.Sites
             String theThumbnailUrlString;
             if( !StringUtils.StringBetween( thePartialUrlString, "/flv/", ".flv", out theThumbnailUrlString ) )
             {
-                aTag.Error = "Failed to read video's URL";
+                aError = "Failed to read video's URL";
                 return;
             }
 
             int theLastSlashIndex = theThumbnailUrlString.LastIndexOf( "/" );
             if( theLastSlashIndex == -1 )
             {
-                aTag.Error = "Failed to read video's URL";
+                aError = "Failed to read video's URL";
                 return;
             }
 
             theThumbnailUrlString = "http://i01.img.tudou.com/data/imgs/i/" + theThumbnailUrlString.Remove( theLastSlashIndex );
             theThumbnailUrlString += "/p.jpg";
 
-            aTag.VideoTitle = theVideoTitle;
-            aTag.VideoUrl = new Uri( theVideoUrlString );
-            aTag.ThumbnailUrl = new Uri( theThumbnailUrlString );
-            aTag.FileName = aTag.VideoTitle;
-            aTag.FileExtension = "Flash Video (*.flv)|*.flv";
+            DownloadTag theTag = new DownloadTag();
+            theTag.VideoTitle = theVideoTitle;
+            theTag.VideoUrl = new Uri( theVideoUrlString );
+            theTag.ThumbnailUrl = new Uri( theThumbnailUrlString );
+            theTag.FileName = theTag.VideoTitle;
+            theTag.FileExtension = "Flash Video (*.flv)|*.flv";
+
+            aDownloadQueue.Add( theTag );
         }
     }
 }

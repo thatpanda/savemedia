@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Utility;
 
@@ -6,15 +7,16 @@ namespace SaveMedia.Sites
 {
     static class Vimeo
     {
-        public static void TryParse( ref Uri            aUrl,
-                                     out DownloadTag    aTag )
+        public static void TryParse( ref Uri aUrl,
+                                     ref List<DownloadTag> aDownloadQueue,
+                                     out String aError )
         {
-            aTag = new DownloadTag();
+            aError = String.Empty;
 
             String theSourceCode;
             if( !NetUtils.DownloadString( aUrl, out theSourceCode ) )
             {
-                aTag.Error = "Failed to connect to " + aUrl.Host;
+                aError = "Failed to connect to " + aUrl.Host;
                 return;
             }
 
@@ -22,7 +24,7 @@ namespace SaveMedia.Sites
             if( !StringUtils.StringBetween( theSourceCode, "property=\"og:url\" content=\"http://vimeo.com/", "\"", out theVideoId ) &&
                 !StringUtils.StringBetween( theSourceCode, "clipid=", ";", out theVideoId )  )
             {
-                aTag.Error = "Failed to read video's ID";
+                aError = "Failed to read video's ID";
                 return;
             }
 
@@ -30,7 +32,7 @@ namespace SaveMedia.Sites
             String theThumbnailUrlStr;
             if( !StringUtils.StringBetween( theSourceCode, "\"thumbnail\":\"", "\"", out theThumbnailUrlStr ) )
             {
-                aTag.Error = "Failed to read video's thumbnail";
+                aError = "Failed to read video's thumbnail";
                 return;
             }
 
@@ -41,36 +43,39 @@ namespace SaveMedia.Sites
             String theXmlSource;
             if( !NetUtils.DownloadString( theXmlUrl, out theXmlSource ) )
             {
-                aTag.Error = "Video is not found";
+                aError = "Video is not found";
                 return;
             }
 
             String theVideoTitle;
             if( !StringUtils.StringBetween( theXmlSource, "<caption>", "</caption>", out theVideoTitle ) )
             {
-                aTag.Error = "Failed to read video's title";
+                aError = "Failed to read video's title";
                 return;
             }
 
             String theRequestSignature;
             if( !StringUtils.StringBetween( theXmlSource, "<request_signature>", "</request_signature>", out theRequestSignature ) )
             {
-                aTag.Error = "Failed to read video's signature";
+                aError = "Failed to read video's signature";
                 return;
             }
 
             String theRequestSignatureExpires;
             if( !StringUtils.StringBetween( theXmlSource, "<request_signature_expires>", "</request_signature_expires>", out theRequestSignatureExpires ) )
             {
-                aTag.Error = "Failed to read video's signature";
+                aError = "Failed to read video's signature";
                 return;
             }
 
-            aTag.VideoTitle = theVideoTitle;
-            aTag.VideoUrl = new Uri( "http://vimeo.com/moogaloop/play/clip:" + theVideoId + "/" + theRequestSignature + "/" + theRequestSignatureExpires + "/?q=sd&type=local" );
-            aTag.ThumbnailUrl = new Uri( theThumbnailUrlStr );
-            aTag.FileName = aTag.VideoTitle;
-            aTag.FileExtension = "Flash Video (*.flv)|*.flv";
+            DownloadTag theTag = new DownloadTag();
+            theTag.VideoTitle = theVideoTitle;
+            theTag.VideoUrl = new Uri( "http://vimeo.com/moogaloop/play/clip:" + theVideoId + "/" + theRequestSignature + "/" + theRequestSignatureExpires + "/?q=sd&type=local" );
+            theTag.ThumbnailUrl = new Uri( theThumbnailUrlStr );
+            theTag.FileName = theTag.VideoTitle;
+            theTag.FileExtension = "Flash Video (*.flv)|*.flv";
+
+            aDownloadQueue.Add( theTag );
         }
     }
 }

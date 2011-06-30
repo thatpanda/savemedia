@@ -81,6 +81,7 @@
       <DependentUpon>CustomComboBox.cs</DependentUpon>
     </Compile>
     <Compile Include="DownloadTag.cs" />
+    <Compile Include="Sites\Youku.cs" />
     <Compile Include="Utility\FormUtils.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>

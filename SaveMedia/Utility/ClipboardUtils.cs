@@ -4,9 +4,9 @@ namespace Utility
 {
     static class ClipboardUtils
     {
-        public static String ReadClipboardUrl()
+        public static String ReadUrl()
         {
-            String theClipboardString = ReadClipboardText();
+            String theClipboardString = ReadText();
             String theUrl = String.Empty;
 
             if( !String.IsNullOrEmpty( theClipboardString ) )
@@ -23,7 +23,7 @@ namespace Utility
             return theUrl;
         }
 
-        public static String ReadClipboardText()
+        public static String ReadText()
         {
             System.Windows.Forms.IDataObject theData = System.Windows.Forms.Clipboard.GetDataObject();
 
