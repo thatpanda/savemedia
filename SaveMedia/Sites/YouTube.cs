@@ -62,39 +62,57 @@ namespace SaveMedia.Sites
             String theAvailableFmt = AvailableQuality( theFmtMap, thePreferedQuality );
 
             String theFmtStreamMap;
-            if( !StringUtils.StringBetween( theSourceCode, "&fmt_stream_map=", "&", out theFmtStreamMap ) &&
+            if( !StringUtils.StringBetween( theSourceCode, "&amp;url_encoded_fmt_stream_map=", "&amp;", out theFmtStreamMap ) &&
+                !StringUtils.StringBetween( theSourceCode, "&fmt_stream_map=", "&", out theFmtStreamMap ) &&
                 !StringUtils.StringBetween( theSourceCode, "&amp;fmt_stream_map=", "&amp;", out theFmtStreamMap ) )
             {
                 aError = "Failed to extract video's fmt stream map";
                 return;
             }
             theFmtStreamMap = System.Web.HttpUtility.UrlDecode( theFmtStreamMap );
+            if( theFmtStreamMap.ToLower().Contains( "%2f" ) )
+            {
+                theFmtStreamMap = Uri.UnescapeDataString( theFmtStreamMap );
+            }
+            theFmtStreamMap = "," + theFmtStreamMap;
 
-            String[] theUrls = theFmtStreamMap.Split( ',' );
+            String[] theSplitStr = new String[1];
+            theSplitStr[ 0 ] = ",url=";
+            String[] theUrls = theFmtStreamMap.Split( theSplitStr, StringSplitOptions.RemoveEmptyEntries );
             if( theUrls.Length == 0 )
             {
                 aError = "Failed to split video's URLs";
                 return;
             }
 
-            String theUrl;
-            if( !StringUtils.StringBetween( theUrls[ 0 ], "|", "||", out theUrl ) )
-            {
-                aError = "Failed to extract video's URL";
-                return;
-            }
+            // TODO: check for valid URL
+            String theUrl = theUrls[0];
+
+            // debug only
+            //System.Windows.Forms.MessageBox.Show(
+            //    theUrl + "\n\n" +
+            //    System.Web.HttpUtility.UrlDecode( theUrl ) + "\n\n" +
+            //    Uri.UnescapeDataString( theUrl ) );
 
             if( !System.String.IsNullOrEmpty( theAvailableFmt ) )
             {
+                //System.Windows.Forms.MessageBox.Show( theAvailableFmt );
                 foreach( System.String theLink in theUrls )
                 {
-                    if( theLink.StartsWith( theAvailableFmt + "|" ) )
+                    if( theLink.Contains( "&itag=" + theAvailableFmt + "&" ) ||
+                        theLink.EndsWith( "&itag=" + theAvailableFmt ) )
                     {
-                        if( !StringUtils.StringBetween( theLink, "|", "||", out theUrl ) )
+                        int theFallbackHostIndex = theLink.IndexOf( "&fallback_host=" );
+                        if( theFallbackHostIndex != -1 )
                         {
-                            aError = "Failed to extract video's URL";
-                            return;
+                            theUrl = theLink.Substring( 0, theFallbackHostIndex );
                         }
+                        else
+                        {
+                            theUrl = theLink;
+                        }
+                        //System.Windows.Forms.MessageBox.Show( theLink );
+                        //System.Windows.Forms.Clipboard.SetText( theLink );
                         break;
                     }
                 }
