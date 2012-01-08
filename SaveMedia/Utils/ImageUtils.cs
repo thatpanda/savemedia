@@ -43,7 +43,7 @@ namespace Utility
 
         public static System.Drawing.Icon AssociatedIcon( String aFilename )
         {
-            new UIPermission( UIPermissionWindow.AllWindows ).Demand();
+            //new UIPermission( UIPermissionWindow.AllWindows ).Demand();
 
             IntPtr hImg;
             SHFILEINFO theFileInfo = new SHFILEINFO();
