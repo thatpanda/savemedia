@@ -13,8 +13,10 @@ using Utility;
 
 namespace SaveMedia
 {
-    public partial class MainForm : Form
+    public class Controller
     {
+        private IMainForm mUI = null;
+
         private const String gcFFmpegPath = "Plugin\\bin\\ffmpeg.exe";
         private const double gcOneKB = 1024;
         private const double gcOneMB = gcOneKB * 1024;
@@ -22,7 +24,6 @@ namespace SaveMedia
         private System.Net.WebClient mWebClient;
         private System.Net.WebClient mThumbnailClient;
 
-        private String mDefaultTitle;
         private String mThumbnailPath;
         private String mDownloadDestination;
         private String mConversionDestination;
@@ -37,7 +38,6 @@ namespace SaveMedia
         private double  mBytesReceived;
 
         private double  mDuration;
-        private int     mPercentage;
 
         private String  mPlaylistDestination;
 
@@ -47,43 +47,9 @@ namespace SaveMedia
         private System.Collections.Generic.List< DownloadTag > mDownloadQueue;
         private System.Collections.Generic.List< String > mConvertQueue;
 
-        delegate void ChangeLayoutCallBack( String aPhase );
-        delegate void NotifyUserCallBack();
-        delegate DialogResult PromptForUpdateCallBack();
-
-        public MainForm()
+        public Controller( IMainForm aUI )
         {
-            InitializeComponent();
-
-            mConversion = new CustomComboBox();
-            mConversionGroupBox.Controls.Clear();
-            mConversionGroupBox.Controls.Add( mConversion );
-            mConversion.DrawMode = DrawMode.OwnerDrawFixed;
-            mConversion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            mConversion.FormattingEnabled = true;
-            mConversion.ItemHeight = 13;
-            mConversion.Items.AddRange( new object[] {
-            "Do not convert file",
-            "MPEG-1 Audio Layer 3 (*.mp3)",
-            "Windows Media Video (*.wmv)"} );
-            mConversion.Location = new System.Drawing.Point( 6, 19 );
-            mConversion.Name = "mConversion";
-            mConversion.Size = new System.Drawing.Size( 368, 21 );
-            mConversion.TabIndex = 2;
-
-            ( (CustomComboBox)mConversion ).BuildImageList();
-
-            mDefaultTitle = SaveMedia.Program.Title + " " + SaveMedia.Program.TitleVersion;
-            this.Text = mDefaultTitle;
-
-            if( !System.IO.File.Exists( gcFFmpegPath ) )
-            {
-                mConversion.Items.Clear();
-                mConversion.Items.Add( "Plug-in not found" );
-                mConversion.Enabled = false;
-            }
-            mConversion.SelectedIndex = 0;
-            ShowStatus( String.Empty );
+            mUI = aUI;
 
             mWebClient = new System.Net.WebClient();
             //mWebClient.CachePolicy = new System.Net.Cache.RequestCachePolicy( System.Net.Cache.RequestCacheLevel.Revalidate );
@@ -101,21 +67,20 @@ namespace SaveMedia
             mDelayTimer.Interval = 1000;
             mDelayTimer.Tick += new EventHandler( mDelayTimer_Tick );
 
-            mDownloadQueue = new List< DownloadTag >();
-            mConvertQueue = new List< String >();
+            mDownloadQueue = new List<DownloadTag>();
+            mConvertQueue = new List<String>();
 
-            UpdateUtils.StartupCheckIfNeeded( this );
+            UpdateUtils.StartupCheckIfNeeded( mUI );
         }
 
-        public DialogResult PromptForUpdate()
+        public bool ConverterExists
         {
-            if( this.InvokeRequired )
-            {
-                PromptForUpdateCallBack theCallBack = new PromptForUpdateCallBack( PromptForUpdate );
-                return (DialogResult) this.Invoke( theCallBack );
-            }
+            get{ return System.IO.File.Exists( this.ConverterPath ); }
+        }
 
-            return MessageBox.Show( this, "A newer version of SaveMedia is available.\n\nWould you like to download now?", "Updates", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1 );
+        public String ConverterPath
+        {
+            get{ return gcFFmpegPath; }
         }
 
         private void mDelayTimer_Tick( object sender, EventArgs e )
@@ -132,33 +97,27 @@ namespace SaveMedia
                 }
                 else
                 {
-                    ChangeLayout( "Download failed" );
+                    mUI.ChangeLayout( "Download failed" );
                 }
             }
             else
             {
-                ShowStatus( "Download begins in " + mWaitingTime + " secs" );
+                mUI.StatusMessage = "Download begins in " + mWaitingTime + " secs";
             }
         }
 
-        private void mOkButton_Click( object sender, EventArgs e )
-        {
-            ChangeLayout( "OK clicked" );
-            ClearTemporaryFiles();
-        }
-
-        private void mCancelButton_Click( object sender, EventArgs e )
+        public void Abort()
         {
             if( mWaitingTime != 0 )
             {
                 mWaitingTime = 0;
                 mDelayTimer.Stop();
-                ChangeLayout( "Download cancelled" );
+                mUI.ChangeLayout( "Download cancelled" );
             }
             else if( mPlugin != null )
             {
                 mPlugin.Kill();
-                ChangeLayout( "Conversion cancelled" );
+                mUI.ChangeLayout( "Conversion cancelled" );
             }
             else
             {
@@ -167,28 +126,27 @@ namespace SaveMedia
             }
         }
 
-        private void mDownloadButton_Click( object sender, EventArgs e )
+        public void ParseUrl( String aUrl )
         {
-            InputEnabled( false );
-            mDownloadQueue.Clear();
-            mConvertQueue.Clear();
-            mPlaylistDestination = String.Empty;
-            mProgressBar.Value = 0;
 
             Uri theUrl;
-            bool isValid = Uri.TryCreate( mUrl.Text, UriKind.Absolute, out theUrl );
+            bool isValid = Uri.TryCreate( aUrl, UriKind.Absolute, out theUrl );
 
             if( !isValid )
             {
-                ShowStatus( "Unsupported URL" );
-                InputEnabled( true );
+                mUI.StatusMessage = "Unsupported URL";
+                mUI.InputEnabled = true;
                 return;
             }
+			
+			mDownloadQueue.Clear();
+            mConvertQueue.Clear();
+            mPlaylistDestination = String.Empty;
 
-            UrlParser( ref theUrl );
+            ParseUrl( ref theUrl );
         }
 
-        private void UrlParser( ref Uri aUrl )
+        public void ParseUrl( ref Uri aUrl )
         {
             if( aUrl.OriginalString.StartsWith( "http://" ) )
             {
@@ -199,21 +157,21 @@ namespace SaveMedia
                 else if( aUrl.Host.EndsWith( ".rapidshare.com" ) )
                 {
                     //DownloadRapidShareFile( ref aUrl );
-                    mStatus.Text = "Sorry, this site is not supported";
-                    InputEnabled( true );
+                    mUI.StatusMessage = "Sorry, this site is not supported";
+                    mUI.InputEnabled = true;
                     return;
                 }
                 else
                 {
-                    ShowStatus( "Connecting to " + aUrl.Host );
+                    mUI.StatusMessage = "Connecting to " + aUrl.Host;
 
                     String theError;
 
                     if( aUrl.OriginalString.StartsWith( "http://www.tudou.com" ) )
                     {
                         //Sites.Tudou.TryParse( ref aUrl, ref mDownloadQueue, out theError );
-                        mStatus.Text = "Sorry, this site is no longer supported";
-                        InputEnabled( true );
+                        mUI.StatusMessage = "Sorry, this site is no longer supported";
+                        mUI.InputEnabled = true;
                         return;
                     }
                     else if( aUrl.OriginalString.StartsWith( "http://v.youku.com" ) )
@@ -236,15 +194,15 @@ namespace SaveMedia
                     else if( aUrl.OriginalString.StartsWith( "http://link.brightcove.com" ) )
                     {
                         //DownloadBrightcoveVideo( ref theUrl );
-                        mStatus.Text = "Sorry, this site is not supported yet";
-                        InputEnabled( true );
+                        mUI.StatusMessage = "Sorry, this site is not supported yet";
+                        mUI.InputEnabled = true;
                         return;
                     }
                     else
                     {
                         String theFilename = System.IO.Path.GetFileName( aUrl.OriginalString );
                         String theFileExt = System.IO.Path.GetExtension( aUrl.OriginalString );
-                        String theFilePath = FileUtils.SaveFile( theFilename, theFileExt + "|*" + theFileExt, this );
+                        String theFilePath = FileUtils.SaveFile( theFilename, theFileExt + "|*" + theFileExt, mUI.Win32Window );
 
                         DownloadFile( aUrl, theFilePath );
                         return;
@@ -252,8 +210,8 @@ namespace SaveMedia
 
                     if( !String.IsNullOrEmpty( theError ) )
                     {
-                        ShowStatus( theError );
-                        InputEnabled( true );
+                        mUI.StatusMessage = theError;
+                        mUI.InputEnabled = true;
                         return;
                     }
 
@@ -262,15 +220,15 @@ namespace SaveMedia
             }
             else
             {
-                if( mConversion.SelectedIndex == 0 )
+                if( mUI.ConversionComboBox.SelectedIndex == 0 )
                 {
-                    InputEnabled( true );
+                    mUI.InputEnabled = true;
                     return;
                 }
                 else if( !String.IsNullOrEmpty( aUrl.OriginalString ) &&
                          System.IO.File.Exists( aUrl.OriginalString ) )
                 {
-                    ConvertFile( mUrl.Text, mUrl.Text );
+                    ConvertFile( aUrl.OriginalString, aUrl.OriginalString );
                 }
             }
         }
@@ -312,11 +270,11 @@ namespace SaveMedia
             }
             else if( isSuccess )
             {
-                ChangeLayout( "Conversion completed" );
+                mUI.ChangeLayout( "Conversion completed" );
             }
             else
             {
-                ChangeLayout( "Conversion failed" );
+                mUI.ChangeLayout( "Conversion failed" );
             }
         }
 
@@ -343,13 +301,10 @@ namespace SaveMedia
                     if( theMatch.Success && theMatch.Groups.Count == 2 )
                     {
                         double theProgress = System.Convert.ToDouble( theMatch.Groups[ 1 ].ToString() );
-                        mPercentage = (int)( theProgress / mDuration * 100 );
-                        if( mPercentage > 100 )
-                        {
-                            mPercentage = 100;
-                        }
+                        int theConversionPercentage = (int) ( theProgress / mDuration * 100 );
+                        theConversionPercentage = Math.Min( theConversionPercentage, 100 );
 
-                        ChangeLayout( "Converting..." );
+                        mUI.ConversionProgress = theConversionPercentage;
                     }
                 }
             }
@@ -359,7 +314,7 @@ namespace SaveMedia
         {
             mDelayTimer.Stop();
 
-            ShowStatus( "Connecting to " + aUrl.Host );
+            mUI.StatusMessage = "Connecting to " + aUrl.Host;
 
             DownloadTag theTag;
 
@@ -367,19 +322,19 @@ namespace SaveMedia
 
             if( !String.IsNullOrEmpty( theTag.Error ) )
             {
-                ShowStatus( theTag.Error );
-                InputEnabled( true );
+                mUI.StatusMessage = theTag.Error;
+                mUI.InputEnabled = true;
                 return;
             }
 
             mWaitingTime = theTag.WaitingTime;
             mDelayTimer.Start();
 
-            theTag.DownloadDestination = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension + "|*" + theTag.FileExtension, this );
+            theTag.DownloadDestination = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension + "|*" + theTag.FileExtension, mUI.Win32Window );
 
             if( String.IsNullOrEmpty( theTag.DownloadDestination ) )
             {
-                ChangeLayout( "Cancel clicked" );
+                mUI.ChangeLayout( "Cancel clicked" );
                 mDelayTimer.Stop();
                 ClearTemporaryFiles();
                 return;
@@ -387,8 +342,8 @@ namespace SaveMedia
 
             mDownloadQueue.Add( theTag );
 
-            mDownloadButton.Visible = false;
-            mCancelButton.Visible = true;
+            //mDownloadButton.Visible = false;
+            //mCancelButton.Visible = true;
         }
 
         private void YouTubeVideoParser( ref Uri aUrl )
@@ -419,7 +374,7 @@ namespace SaveMedia
                 theNewUrlString = theNewUrlString.Replace( "http://www.youtube.com/v/", "http://www.youtube.com/watch?v=" );
 
                 Uri theNewUrl = new Uri( theNewUrlString );
-                UrlParser( ref theNewUrl );
+                ParseUrl( ref theNewUrl );
             }
             else
             {
@@ -429,7 +384,7 @@ namespace SaveMedia
 
         private void DownloadYouTubePlaylist( ref Uri aUrl, int aPageNumber )
         {
-            ShowStatus( "Connecting to " + aUrl.Host );
+            mUI.StatusMessage = "Connecting to " + aUrl.Host;
 
             System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( aUrl.Query );
             String thePlaylistId = theQueryStrings[ "p" ];
@@ -451,16 +406,16 @@ namespace SaveMedia
             String theSourceCode;
             if( !NetUtils.DownloadString( aUrl, out theSourceCode ) )
             {
-                ShowStatus( "Failed to connect to " + aUrl.Host );
-                InputEnabled( true );
+                mUI.StatusMessage = "Failed to connect to " + aUrl.Host;
+                mUI.InputEnabled = true;
                 return;
             }
 
             String thePlaylistTitle;
             if( !StringUtils.StringBetween( theSourceCode, "<h1>", "</h1>", out thePlaylistTitle ) )
             {
-                ShowStatus( "Failed to analyze playlist" );
-                InputEnabled( true );
+                mUI.StatusMessage = "Failed to analyze playlist";
+                mUI.InputEnabled = true;
                 return;
             }
 
@@ -470,8 +425,8 @@ namespace SaveMedia
 
             if( !theUrlMatch.Success )
             {
-                ShowStatus( "Failed to analyze playlist" );
-                InputEnabled( true );
+                mUI.StatusMessage = "Failed to analyze playlist";
+                mUI.InputEnabled = true;
                 return;
             }
 
@@ -479,9 +434,9 @@ namespace SaveMedia
             {
                 FolderBrowserDialog theDialog = new FolderBrowserDialog();
                 theDialog.Description = "Please select the destination for videos from:\n\n" + thePlaylistTitle;
-                if( theDialog.ShowDialog( this ) != DialogResult.OK )
+                if( theDialog.ShowDialog( mUI.Win32Window ) != DialogResult.OK )
                 {
-                    ChangeLayout( "Cancel clicked" );
+                    mUI.ChangeLayout( "Cancel clicked" );
                     ClearTemporaryFiles();
                     return;
                 }
@@ -499,8 +454,8 @@ namespace SaveMedia
 
                 if( !String.IsNullOrEmpty( theError ) )
                 {
-                    ShowStatus( theError );
-                    InputEnabled( true );
+                    mUI.StatusMessage = theError;
+                    mUI.InputEnabled = true;
                     return;
                 }
 
@@ -529,7 +484,7 @@ namespace SaveMedia
 
         private void DownloadYouTubeVideo( ref Uri aUrl )
         {
-            ShowStatus( "Connecting to " + aUrl.Host );
+            mUI.StatusMessage = "Connecting to " + aUrl.Host;
 
             String theError;
 
@@ -537,37 +492,12 @@ namespace SaveMedia
 
             if( !String.IsNullOrEmpty( theError ) )
             {
-                ShowStatus( theError );
-                InputEnabled( true );
+                mUI.StatusMessage = theError;
+                mUI.InputEnabled = true;
                 return;
             }
 
             StartDownload();
-        }
-
-        private void DisplayMediaInfo( DownloadTag aTag )
-        {
-            if( String.IsNullOrEmpty( aTag.VideoTitle ) )
-            {
-                return;
-            }
-
-            mTitleLabel.Text = "Title: " + aTag.VideoTitle.Replace( "\\", "" );
-            mSizeLabel.Text = "Size: ??? MB";
-
-            if( String.IsNullOrEmpty( aTag.Quality ) )
-            {
-                mQualityLabel.Text = String.Empty;
-            }
-            else
-            {
-                mQualityLabel.Text = "Quality: " + aTag.Quality;
-            }
-
-            mLocationLabel.Text = String.Empty;
-            
-            ShowStatus( "Ready to download" );
-            MediaInfoVisible( true );
         }
 
         private void DownloadThumbnail( Uri aUrl )
@@ -595,21 +525,21 @@ namespace SaveMedia
         private void DownloadFile( DownloadTag aTag )
         {
             DownloadThumbnail( aTag.ThumbnailUrl );
-            DisplayMediaInfo( aTag );
+            mUI.DisplayMediaInfo( aTag );
 
             if( String.IsNullOrEmpty( aTag.DownloadDestination ) )
             {
-                aTag.DownloadDestination = FileUtils.SaveFile( aTag.FileName, aTag.FileExtension, this );
+                aTag.DownloadDestination = FileUtils.SaveFile( aTag.FileName, aTag.FileExtension, mUI.Win32Window );
             }
 
             DownloadFile( aTag.VideoUrl, aTag.DownloadDestination );
         }
 
-        private void DownloadFile( Uri aUrl, String aDestination )
+        public void DownloadFile( Uri aUrl, String aDestination )
         {
             if( String.IsNullOrEmpty( aDestination ) )
             {
-                ChangeLayout( "Cancel clicked" );
+                mUI.ChangeLayout( "Cancel clicked" );
                 ClearTemporaryFiles();
                 return;
             }
@@ -617,18 +547,12 @@ namespace SaveMedia
             mFileSize = 0;
             mFileSizeString = "??? MB";
 
-            mProgressBar.Value = 0;
             mDownloadDestination = aDestination;
 
             mWebClient.Headers.Add( "user-agent", SaveMedia.Program.UserAgent );
             mWebClient.DownloadFileAsync( aUrl, mDownloadDestination );
 
-            this.Text = "0% - " + mDefaultTitle;
-            ShowStatus( "Downloading..." );
-            //mLocationLabel.Text = "Location: " + mDownloadDestination;
-
-            mDownloadButton.Visible = false;
-            mCancelButton.Visible = true;
+            mUI.DownloadStarted( aDestination );
         }
 
         private void DownloadProgressChanged( object sender, System.Net.DownloadProgressChangedEventArgs e )
@@ -639,7 +563,7 @@ namespace SaveMedia
                 mFileSizeInMB = mFileSize;
                 mFileSizeInMB /= gcOneMB;
                 mFileSizeString = mFileSizeInMB.ToString( "0.00" ) + " MB";
-                mSizeLabel.Text = "Size: " + mFileSizeString;
+                mUI.FileSize( mFileSizeString );
                 mBytesReceived = 0;
             }
 
@@ -647,15 +571,14 @@ namespace SaveMedia
             {
                 mBytesReceived = e.BytesReceived;
 
-                this.Text = e.ProgressPercentage + "% - " + mDefaultTitle;
-                mProgressBar.Value = e.ProgressPercentage;
+                mUI.DownloadProgress = e.ProgressPercentage;
 
                 double theReceivedFileSizeInMB = e.BytesReceived;
                 theReceivedFileSizeInMB /= gcOneMB;
-                ShowStatus( "Downloading..." +
-                            theReceivedFileSizeInMB.ToString( "0.00" ) +
-                            "/" +
-                            mFileSizeString );
+                mUI.StatusMessage = "Downloading..." +
+                                    theReceivedFileSizeInMB.ToString( "0.00" ) +
+                                    "/" +
+                                    mFileSizeString;
             }
         }
 
@@ -663,16 +586,16 @@ namespace SaveMedia
         {
             if( e.Cancelled )
             {
-                ChangeLayout( "Download cancelled" );
+                mUI.ChangeLayout( "Download cancelled" );
             }
             else if( e.Error != null )
             {
-                ChangeLayout( "Download failed" );
-                ShowStatus( e.Error.Message );
+                mUI.ChangeLayout( "Download failed" );
+                mUI.StatusMessage = e.Error.Message;
             }
             else
             {
-                if( mConversion.SelectedIndex != 0 )
+                if( mUI.ConversionComboBox.SelectedIndex != 0 )
                 {
                     mConvertQueue.Add( mDownloadDestination );
                 }
@@ -691,38 +614,35 @@ namespace SaveMedia
                 }
                 else
                 {
-                    ChangeLayout( "Download completed" );
+                    mUI.ChangeLayout( "Download completed" );
                 }
             }
         }
 
         private void ConvertFile( String aSource, String aDestination )
         {
-            if( mConversion.SelectedIndex == 0 )
+            if( mUI.ConversionComboBox.SelectedIndex == 0 )
             {
                 return;
             }
 
-            if( !System.IO.File.Exists( gcFFmpegPath ) )
+            if( !this.ConverterExists )
             {
-                ChangeLayout( "Conversion failed, plug-in not found" );
+                mUI.ChangeLayout( "Conversion failed, plug-in not found" );
                 return;
             }
-
-            mPercentage = 0;
-            ChangeLayout( "Converting..." );
 
             mConversionDestination = aDestination;
 
             String theExtension = String.Empty;
             String theArguments = String.Empty;
 
-            if( mConversion.SelectedIndex == 1 )
+            if( mUI.ConversionComboBox.SelectedIndex == 1 )
             {
                 theExtension = ".mp3";
                 theArguments = "-y -i \"{0}\" -ar 44100 -ab 192k -ac 2 \"{1}\"";
             }
-            else if( mConversion.SelectedIndex == 2 )
+            else if( mUI.ConversionComboBox.SelectedIndex == 2 )
             {
                 theExtension = ".wmv";
                 theArguments = "-y -i \"{0}\" -vcodec wmv2 -sameq -acodec mp2 -ar 44100 -ab 192k -f avi \"{1}\"";
@@ -756,240 +676,22 @@ namespace SaveMedia
             mPlugin.BeginErrorReadLine();
             mPlugin.BeginOutputReadLine();
 
-            mDownloadButton.Visible = false;
-            mCancelButton.Visible = true;
+            mUI.ConvertStarted();
         }
 
         private void ThumbnailDownloadCompleted( object sender, System.ComponentModel.AsyncCompletedEventArgs e )
         {
             if( !e.Cancelled && e.Error == null )
             {
-                mThumbnail.ImageLocation = mThumbnailPath;
+                mUI.ThumbnailPath = mThumbnailPath;
             }
         }
 
-        private void ChangeLayout( String aPhase )
-        {
-            if( this.InvokeRequired )
-            {
-                ChangeLayoutCallBack theCallBack = new ChangeLayoutCallBack( ChangeLayout );
-                this.Invoke( theCallBack, new object[] { aPhase } );
-                return;
-            }
-
-            this.SuspendLayout();
-
-            switch( aPhase )
-            {
-                case "Cancel clicked":
-
-                    this.Text = mDefaultTitle;
-                    mProgressBar.Value = mProgressBar.Maximum;
-
-                    ShowStatus( "Download cancelled" );
-
-                    MediaInfoVisible( false );
-                    InputEnabled( true );
-                    break;
-
-                case "Converting...":
-
-                    this.Text = mPercentage.ToString() + "% - " + mDefaultTitle;
-                    mProgressBar.Value = mPercentage;
-
-                    ShowStatus( aPhase + mPercentage.ToString() + "%" );
-                    break;
-
-                case "Conversion cancelled":
-                case "Conversion completed":
-                case "Conversion failed":
-                case "Conversion failed, plug-in not found":
-
-                    this.Text = mDefaultTitle;
-                    mProgressBar.Value = mProgressBar.Maximum;
-
-                    ShowStatus( aPhase );
-
-                    mDownloadButton.Visible = false;
-                    mOkButton.Visible = true;
-                    mCancelButton.Visible = false;
-
-                    NotifyUser();
-                    break;
-
-                case "Downloading":
-
-                    mDownloadButton.Visible = false;
-                    mCancelButton.Visible = true;
-                    break;
-
-                case "Download cancelled":
-
-                    this.Text = mDefaultTitle;
-                    mProgressBar.Value = mProgressBar.Maximum;
-
-                    ShowStatus( aPhase );
-
-                    mDownloadButton.Visible = false;
-                    mOkButton.Visible = true;
-                    mCancelButton.Visible = false;
-
-                    NotifyUser();
-                    break;
-                
-                case "Download completed":
-
-                    this.Text = mDefaultTitle;
-                    mProgressBar.Value = mProgressBar.Maximum;
-
-                    ShowStatus( aPhase );
-
-                    mOkButton.Visible = true;
-                    mCancelButton.Visible = false;
-
-                    NotifyUser();
-                    break;
-
-                case "Download failed":
-
-                    this.Text = mDefaultTitle;
-                    mProgressBar.Value = mProgressBar.Maximum;
-
-                    ShowStatus( aPhase );
-
-                    mDownloadButton.Visible = false;
-                    mOkButton.Visible = true;
-                    mCancelButton.Visible = false;
-
-                    NotifyUser();
-                    break;
-
-                case "OK clicked":
-
-                    InputEnabled( true );
-                    MediaInfoVisible( false );
-                    mProgressBar.Value = 0;
-                    ShowStatus( String.Empty );
-
-                    mDownloadButton.Visible = true;
-                    mOkButton.Visible = false;
-                    mCancelButton.Visible = false;
-                    break;
-
-                default:
-
-                    throw new System.Exception( "Unknown phase" );
-            }
-
-            this.ResumeLayout( false );
-            this.PerformLayout();
-        }
-
-        private void mUrl_TextChanged( object sender, EventArgs e )
-        {
-            Uri theUrl;
-            mDownloadButton.Enabled = Uri.TryCreate( mUrl.Text, UriKind.Absolute, out theUrl );
-
-            if( mDownloadButton.Enabled )
-            {
-                if( System.IO.File.Exists( mUrl.Text ) )
-                {
-                    mDownloadButton.Text = "Convert";
-                }
-                else
-                {
-                    mDownloadButton.Text = "Download";
-                }
-            }
-        }
-
-        private void InputEnabled( bool aIsEnabled )
-        {
-            mUrl.Enabled = aIsEnabled;
-            mConversion.Enabled = aIsEnabled && System.IO.File.Exists( gcFFmpegPath );
-
-            if( aIsEnabled )
-            {
-                String theNewUrl = ClipboardUtils.ReadUrl();
-                if( !mUrl.Text.Equals( theNewUrl ) && !String.IsNullOrEmpty( theNewUrl ) )
-                {
-                    mUrl.Text = ClipboardUtils.ReadUrl();
-                }
-                mUrl_TextChanged( this, new EventArgs() );
-            }
-            else
-            {
-                mDownloadButton.Enabled = false;
-            }
-        }
-
-        private void MediaInfoVisible( bool aIsVisible )
-        {
-            //int theMargin = 3;
-            //int theNewHeight = mUrlGroupBox.Height + theMargin +
-            //                   theMargin + mConversionGroupBox.Height;
-            //mMediaInfoGroupBox.MinimumSize = new Size( mMediaInfoGroupBox.Width, theNewHeight );
-
-            this.SuspendLayout();
-            mUrlGroupBox.Visible = !aIsVisible;
-            mConversionGroupBox.Visible = !aIsVisible;
-            mMediaInfoGroupBox.Visible = aIsVisible;
-            mThumbnail.Image = mThumbnail.InitialImage;
-            this.ResumeLayout( false );
-            this.PerformLayout();
-        }
-
-        private void ShowStatus( String aMessage )
-        {
-            mStatus.Text = aMessage;
-        }
-
-        private void MainForm_FormClosed( object sender, FormClosedEventArgs e )
-        {
-            ClearTemporaryFiles();
-        }
-
-        private void ClearTemporaryFiles()
+        public void ClearTemporaryFiles()
         {
             FileUtils.DeleteFile( mThumbnailPath );
             FileUtils.DeleteFile( mConversionTempInPath );
             FileUtils.DeleteFile( mConversionTempOutPath );
-        }
-
-        private void NotifyUser()
-        {
-            if( this.InvokeRequired )
-            {
-                NotifyUserCallBack theCallBack = new NotifyUserCallBack( NotifyUser );
-                this.Invoke( theCallBack );
-                return;
-            }
-
-            if( !this.ContainsFocus )
-            {
-                FormUtils.FlashWindow( this );
-            }
-        }
-
-        private void mAboutToolStripMenuItem_Click( object sender, EventArgs e )
-        {
-            System.Windows.Forms.Form theForm = new AboutBox();
-            theForm.ShowDialog( this );
-        }
-
-        private void mOptionsToolStripMenuItem_Click( object sender, EventArgs e )
-        {
-            System.Windows.Forms.Form theForm = new OptionsForm();
-            theForm.ShowDialog( this );
-        }
-
-        private void MainForm_Activated( object sender, EventArgs e )
-        {
-            String theNewUrl = ClipboardUtils.ReadUrl();
-            if( mUrl.Enabled && !mUrl.Text.Equals( theNewUrl ) && !String.IsNullOrEmpty( theNewUrl ) )
-            {
-                mUrl.Text = theNewUrl;
-            }
         }
     }
 }

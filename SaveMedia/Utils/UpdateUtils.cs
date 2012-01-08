@@ -13,9 +13,9 @@ namespace Utility
 
         private static System.Net.WebClient mWebClient;
 
-        private static SaveMedia.MainForm mMainForm;
+        private static SaveMedia.IMainForm mMainForm;
 
-        public static void StartupCheckIfNeeded( SaveMedia.MainForm aForm )
+        public static void StartupCheckIfNeeded( SaveMedia.IMainForm aForm )
         {
             if( mAlreadyCheckedForUpdates )
             {
@@ -34,7 +34,7 @@ namespace Utility
             } 
         }
 
-        public static void CheckForUpdatesIfNeeded( SaveMedia.MainForm aForm )
+        public static void CheckForUpdatesIfNeeded( SaveMedia.IMainForm aForm )
         {
             if( mAlreadyCheckedForUpdates )
             {
@@ -62,7 +62,7 @@ namespace Utility
             }
         }
 
-        public static void CheckForUpdates( SaveMedia.MainForm aForm )
+        public static void CheckForUpdates( SaveMedia.IMainForm aForm )
         {
             if( mAlreadyCheckedForUpdates )
             {

@@ -72,42 +72,44 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AboutBox.cs">
+    <Compile Include="UI\AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="AboutBox.Designer.cs">
+    <Compile Include="UI\AboutBox.Designer.cs">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="CustomComboBox.cs">
+    <Compile Include="Controller.cs" />
+    <Compile Include="UI\CustomComboBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="CustomComboBox.Designer.cs">
+    <Compile Include="UI\CustomComboBox.Designer.cs">
       <DependentUpon>CustomComboBox.cs</DependentUpon>
     </Compile>
     <Compile Include="DownloadTag.cs" />
+    <Compile Include="IMainForm.cs" />
     <Compile Include="Sites\Youku.cs" />
-    <Compile Include="Utility\FormUtils.cs" />
-    <Compile Include="MainForm.cs">
+    <Compile Include="Utils\FormUtils.cs" />
+    <Compile Include="UI\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MainForm.Designer.cs">
+    <Compile Include="UI\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="OptionsForm.cs">
+    <Compile Include="UI\OptionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="OptionsForm.Designer.cs">
+    <Compile Include="UI\OptionsForm.Designer.cs">
       <DependentUpon>OptionsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="AboutBox.resx">
+    <EmbeddedResource Include="UI\AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MainForm.resx">
+    <EmbeddedResource Include="UI\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="OptionsForm.resx">
+    <EmbeddedResource Include="UI\OptionsForm.resx">
       <DependentUpon>OptionsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -138,13 +140,13 @@
     <Compile Include="Sites\Tudou.cs" />
     <Compile Include="Sites\Vimeo.cs" />
     <Compile Include="Sites\YouTube.cs" />
-    <Compile Include="Utility\ClipboardUtils.cs" />
-    <Compile Include="Utility\ConvertUtils.cs" />
-    <Compile Include="Utility\FileUtils.cs" />
-    <Compile Include="Utility\ImageUtils.cs" />
-    <Compile Include="Utility\NetUtils.cs" />
-    <Compile Include="Utility\StringUtils.cs" />
-    <Compile Include="Utility\UpdateUtils.cs" />
+    <Compile Include="Utils\ClipboardUtils.cs" />
+    <Compile Include="Utils\ConvertUtils.cs" />
+    <Compile Include="Utils\FileUtils.cs" />
+    <Compile Include="Utils\ImageUtils.cs" />
+    <Compile Include="Utils\NetUtils.cs" />
+    <Compile Include="Utils\StringUtils.cs" />
+    <Compile Include="Utils\UpdateUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

@@ -50,7 +50,7 @@ namespace Utility
             }
         }
 
-        public static String SaveFile( String aFilename, String aFilter, System.Windows.Forms.Form aOwner )
+        public static String SaveFile( String aFilename, String aFilter, IWin32Window aOwner )
         {
             aFilename = FilenameCheck( aFilename );
 
