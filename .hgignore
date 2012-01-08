@@ -1,0 +1,4 @@
+syntax: glob
+SaveMedia.suo
+SaveMedia/bin/
+SaveMedia/obj/
