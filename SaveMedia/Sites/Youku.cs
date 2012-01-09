@@ -132,7 +132,10 @@ namespace SaveMedia.Sites
                 aError = "Failed to read the segments";
                 return;
             }
-            List<String> theFileSegmentIds = FileSegmentIds( ref theFileId, ref theSegments );
+            List<String> theFileSegmentIds = new List<string>();
+            List<String> theFileSegmentSeconds = new List<string>();
+            List<String> theFileSegmentKeys = new List<string>();
+            ParseSegmentData( ref theFileId, ref theSegments, ref theFileSegmentIds, ref theFileSegmentSeconds, ref theFileSegmentKeys );
 
             String theKey1;
             if( !StringUtils.StringBetween( theJson, "\"key1\":\"", "\"", out theKey1 ) )
@@ -177,12 +180,15 @@ namespace SaveMedia.Sites
             String theDestination = theDialog.SelectedPath;
 
             String theSessionId = SessionId();
-            int theIndex = 1;
-            foreach( String theFileSegmentId in theFileSegmentIds )
+            for( int theIndex = 0; theIndex < theFileSegmentIds.Count; theIndex++ )
             {
+                if( theFileSegmentIds.Count == theFileSegmentKeys.Count )
+                {
+                    theFinalKey = theFileSegmentKeys[ theIndex ];
+                }
                 DownloadTag theTag = new DownloadTag();
-                theTag.VideoTitle = theVideoTitle + " part " + theIndex;
-                theTag.VideoUrl = new Uri( "http://f.youku.com/player/getFlvPath/sid/" + theSessionId + "/st/" + theStreamType + "/fileid/" + theFileSegmentId + "?K=" + theFinalKey + "&hd=1&myp=&ts=423" );
+                theTag.VideoTitle = theVideoTitle + " part " + ( theIndex + 1 );
+                theTag.VideoUrl = new Uri( "http://f.youku.com/player/getFlvPath/sid/" + theSessionId + "/st/" + theStreamType + "/fileid/" + theFileSegmentIds[ theIndex ] + "?K=" + theFinalKey + "&hd=1&myp=0&ts=" + theFileSegmentSeconds[ theIndex ] );
                 theTag.ThumbnailUrl = new Uri( theThumbnailUrlStr );
                 theTag.FileName = theTag.VideoTitle;
                 //theTag.FileExtension = "Flash Video (*.flv)|*.flv";
@@ -191,7 +197,6 @@ namespace SaveMedia.Sites
                 theTag.DownloadDestination = theDestination + "\\" + FileUtils.FilenameCheck( theTag.FileName ) + ".mp4";
 
                 aDownloadQueue.Add( theTag );
-                theIndex++;
             }
         }
 
@@ -259,15 +264,22 @@ namespace SaveMedia.Sites
             return theId;
         }
 
-        public static List<String> FileSegmentIds( ref String aFileId, ref String aSegments )
+        public static void ParseSegmentData( ref String aFileId,
+                                             ref String aSegments,
+                                             ref List<String> aFileSegmentIds,
+                                             ref List<String> aFileSegmentSeconds,
+                                             ref List<String> aFileSegmentKeys )
         {
             /*
             {"no":"0","size":"28938844","seconds":"423"},
             {"no":"1","size":"26018448","seconds":"423"},
             {"no":"2","size":"22237273","seconds":"382"}
             */
-            List<String> theFileSegmentIds = new List<string>();
-
+            /*
+            {"no":"0","size":"31798590","seconds":"422","k":"4d8850a693ad090c28275823","k2":"142e3c35692c9e1c1"},
+            {"no":"1","size":"22067001","seconds":"421","k":"ebef6d1cd2f0da5d28275823","k2":"15854034fbcf97988"},
+            {"no":"2","size":"23828637","seconds":"422","k":"27ed05369f1fe3312410dca1","k2":"15735c4ee6fb926fe"},
+            */
             String[] theSegments = aSegments.Split( '}' );
             foreach( String theSegment in theSegments )
             {
@@ -276,11 +288,21 @@ namespace SaveMedia.Sites
                 {
                     theSegmentNumber = String.Format( "{0:X2}", Convert.ToInt32( theSegmentNumber, 16 ) );
                     String theFileSegmentId = aFileId.Substring( 0, 8 ) + theSegmentNumber + aFileId.Substring( 10 );
-                    theFileSegmentIds.Add( theFileSegmentId );
+                    aFileSegmentIds.Add( theFileSegmentId );
+                }
+
+                String theSecond;
+                if( StringUtils.StringBetween( theSegment, "\"seconds\":\"", "\"", out theSecond ) )
+                {
+                    aFileSegmentSeconds.Add( theSecond );
+                }
+
+                String theKey;
+                if( StringUtils.StringBetween( theSegment, "\"k\":\"", "\"", out theKey ) )
+                {
+                    aFileSegmentKeys.Add( theKey );
                 }
             }
-
-            return theFileSegmentIds;
         }
 
         public static Dictionary<String, String> StreamType2Id( ref String aStreamFileIds, ref List<string> aDecryptor )
