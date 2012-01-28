@@ -23,6 +23,11 @@ namespace SaveMedia.Sites
                 return;
             }
 
+            // MV 来自四川的歌声
+            // http://v.youku.com/v_show/id_XOTA4ODg2NTI=.html
+            // Last Exile
+            // http://v.youku.com/v_show/id_XMTgzODA0MTY4.html
+
             // var videoId = '63254965';
             // var videoId2= 'XMjUzMDE5ODYw';
             String theVideoId;
@@ -135,7 +140,11 @@ namespace SaveMedia.Sites
             List<String> theFileSegmentIds = new List<string>();
             List<String> theFileSegmentSeconds = new List<string>();
             List<String> theFileSegmentKeys = new List<string>();
-            ParseSegmentData( ref theFileId, ref theSegments, ref theFileSegmentIds, ref theFileSegmentSeconds, ref theFileSegmentKeys );
+            if( !ParseSegmentData( ref theFileId, ref theSegments, ref theFileSegmentIds, ref theFileSegmentSeconds, ref theFileSegmentKeys ) )
+            {
+                aError = "Failed to parse segment data";
+                return;
+            }
 
             String theKey1;
             if( !StringUtils.StringBetween( theJson, "\"key1\":\"", "\"", out theKey1 ) )
@@ -170,14 +179,19 @@ namespace SaveMedia.Sites
             }
             theThumbnailUrlStr = theThumbnailUrlStr.Replace( "\\", "" );
 
-            // TODO:
-            System.Windows.Forms.FolderBrowserDialog theDialog = new System.Windows.Forms.FolderBrowserDialog();
-            theDialog.Description = "Please select the destination for videos from:\n\n" + theVideoTitle;
-            if( theDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK )
+            String theDestination = String.Empty;
+            if( theFileSegmentIds.Count > 1 )
             {
-                return;
+                // TODO:
+                System.Windows.Forms.FolderBrowserDialog theDialog = new System.Windows.Forms.FolderBrowserDialog();
+                theDialog.Description = "Please select the destination for videos from:\n\n" + theVideoTitle;
+                if( theDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK )
+                {
+                    aError = "Download cancelled";
+                    return;
+                }
+                theDestination = theDialog.SelectedPath;
             }
-            String theDestination = theDialog.SelectedPath;
 
             String theSessionId = SessionId();
             for( int theIndex = 0; theIndex < theFileSegmentIds.Count; theIndex++ )
@@ -187,14 +201,21 @@ namespace SaveMedia.Sites
                     theFinalKey = theFileSegmentKeys[ theIndex ];
                 }
                 DownloadTag theTag = new DownloadTag();
-                theTag.VideoTitle = theVideoTitle + " part " + ( theIndex + 1 );
+                theTag.VideoTitle = theVideoTitle;
+                if( theFileSegmentIds.Count > 1 )
+                {
+                    theTag.VideoTitle += " part " + ( theIndex + 1 );
+                }
                 theTag.VideoUrl = new Uri( "http://f.youku.com/player/getFlvPath/sid/" + theSessionId + "/st/" + theStreamType + "/fileid/" + theFileSegmentIds[ theIndex ] + "?K=" + theFinalKey + "&hd=1&myp=0&ts=" + theFileSegmentSeconds[ theIndex ] );
                 theTag.ThumbnailUrl = new Uri( theThumbnailUrlStr );
                 theTag.FileName = theTag.VideoTitle;
                 //theTag.FileExtension = "Flash Video (*.flv)|*.flv";
                 theTag.FileExtension = "MPEG-4 (*.mp4)|*.mp4";
 
-                theTag.DownloadDestination = theDestination + "\\" + FileUtils.FilenameCheck( theTag.FileName ) + ".mp4";
+                if( !String.IsNullOrEmpty( theDestination ) )
+                {
+                    theTag.DownloadDestination = theDestination + "\\" + FileUtils.FilenameCheck( theTag.FileName ) + ".mp4";
+                }
 
                 aDownloadQueue.Add( theTag );
             }
@@ -264,7 +285,7 @@ namespace SaveMedia.Sites
             return theId;
         }
 
-        public static void ParseSegmentData( ref String aFileId,
+        public static bool ParseSegmentData( ref String aFileId,
                                              ref String aSegments,
                                              ref List<String> aFileSegmentIds,
                                              ref List<String> aFileSegmentSeconds,
@@ -284,7 +305,8 @@ namespace SaveMedia.Sites
             foreach( String theSegment in theSegments )
             {
                 String theSegmentNumber;
-                if( StringUtils.StringBetween( theSegment, "\"no\":\"", "\"", out theSegmentNumber ) )
+                if( StringUtils.StringBetween( theSegment, "\"no\":\"", "\"", out theSegmentNumber ) ||
+                    StringUtils.StringBetween( theSegment, "\"no\":", ",", out theSegmentNumber ) )
                 {
                     theSegmentNumber = String.Format( "{0:X2}", Convert.ToInt32( theSegmentNumber, 16 ) );
                     String theFileSegmentId = aFileId.Substring( 0, 8 ) + theSegmentNumber + aFileId.Substring( 10 );
@@ -303,6 +325,8 @@ namespace SaveMedia.Sites
                     aFileSegmentKeys.Add( theKey );
                 }
             }
+
+            return aFileSegmentIds.Count != 0;
         }
 
         public static Dictionary<String, String> StreamType2Id( ref String aStreamFileIds, ref List<string> aDecryptor )
