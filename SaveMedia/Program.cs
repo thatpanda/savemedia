@@ -9,11 +9,11 @@ namespace SaveMedia
         public const String Description     = "";           // Comments
         public const String Product         = "SaveMedia";  // Product Name
         public const String Company         = "";
-        public const String Copyright       = "© 2011 Eric Choy";
+        public const String Copyright       = "© 2012 Eric Choy";
         public const String AssemblyVersion = "1.0.0.0";
         public const String FileVersion     = "1.7.5.0";
         public const String TitleVersion    = "1.7.5";
-        public const String Date            = "July 30th, 2011";
+        public const String Date            = "February 6th, 2012";
         public const String UserAgent       = "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.15) Gecko/20110303 Firefox/3.6.15 (.NET CLR 3.5.30729)";
 
         /// <summary>
