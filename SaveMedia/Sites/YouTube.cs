@@ -28,7 +28,10 @@ namespace SaveMedia.Sites
             }
 
             String theVideoId;
-            if( !StringUtils.StringBetween( theSourceCode, "&video_id=", "&", out theVideoId ) &&
+            if( !StringUtils.StringBetween( theSourceCode, "'VIDEO_ID': \"", "\"", out theVideoId ) &&
+                !StringUtils.StringBetween( theSourceCode, "\"VIDEO_ID\": \"", "\"", out theVideoId ) &&
+                !StringUtils.StringBetween( theSourceCode, "\\u0026amp;video_id=", "\\u0026amp;", out theVideoId ) &&
+                !StringUtils.StringBetween( theSourceCode, "&video_id=", "&", out theVideoId ) &&
                 !StringUtils.StringBetween( theSourceCode, "&amp;video_id=", "&amp;", out theVideoId ) )
             {
                 aError = "Failed to extract video's id";
@@ -43,7 +46,10 @@ namespace SaveMedia.Sites
             //}
 
             String theToken;
-            if( !StringUtils.StringBetween( theSourceCode, "&t=", "&", out theToken ) &&
+            if( !StringUtils.StringBetween( theSourceCode, "\"t\": \"", "\"", out theToken ) && 
+                !StringUtils.StringBetween( theSourceCode, "\\u0026amp;t=", "\\u0026amp;", out theToken ) &&
+                !StringUtils.StringBetween( theSourceCode, "\\u0026amp;t=", "\"", out theToken ) &&
+                !StringUtils.StringBetween( theSourceCode, "&t=", "&", out theToken ) &&
                 !StringUtils.StringBetween( theSourceCode, "&amp;t=", "&amp;", out theToken ) )
             {
                 aError = "Failed to extract token";
@@ -51,7 +57,9 @@ namespace SaveMedia.Sites
             }
 
             String theFmtMap;
-            if( !StringUtils.StringBetween( theSourceCode, "&fmt_list=", "&", out theFmtMap ) &&
+            if( !StringUtils.StringBetween( theSourceCode, "\"fmt_list\": \"", "\"", out theFmtMap ) && 
+                !StringUtils.StringBetween( theSourceCode, "\\u0026amp;fmt_list=", "\\u0026amp;", out theFmtMap ) &&
+                !StringUtils.StringBetween( theSourceCode, "&fmt_list=", "&", out theFmtMap ) &&
                 !StringUtils.StringBetween( theSourceCode, "&amp;fmt_list=", "&amp;", out theFmtMap ) )
             {
                 aError = "Failed to extract video's fmt map";
@@ -62,7 +70,8 @@ namespace SaveMedia.Sites
             String theAvailableFmt = AvailableQuality( theFmtMap, thePreferedQuality );
 
             String theFmtStreamMap;
-            if( !StringUtils.StringBetween( theSourceCode, "&amp;url_encoded_fmt_stream_map=", "&amp;", out theFmtStreamMap ) &&
+            if( !StringUtils.StringBetween( theSourceCode, "\\u0026amp;url_encoded_fmt_stream_map=", "\\u0026amp;", out theFmtStreamMap ) && 
+                !StringUtils.StringBetween( theSourceCode, "&amp;url_encoded_fmt_stream_map=", "&amp;", out theFmtStreamMap ) &&
                 !StringUtils.StringBetween( theSourceCode, "&fmt_stream_map=", "&", out theFmtStreamMap ) &&
                 !StringUtils.StringBetween( theSourceCode, "&amp;fmt_stream_map=", "&amp;", out theFmtStreamMap ) )
             {
@@ -146,9 +155,14 @@ namespace SaveMedia.Sites
 
             // %2F = /
             // %2C = ,
+            // "fmt_list": "44\/854x480\/99\/0\/0,35\/854x480\/9\/0\/115,43\/640x360\/99\/0\/0,34\/640x360\/9\/0\/115,18\/640x360\/9\/0\/115,5\/320x240\/7\/0\/0"
             if( aFmtMap.Contains( "%2F" ) || aFmtMap.Contains( "%2C" ) )
             {
                 aFmtMap = Uri.UnescapeDataString( aFmtMap );
+            }
+            else if( aFmtMap.Contains( "\\" ) )
+            {
+                aFmtMap = aFmtMap.Replace( "\\", String.Empty );
             }
 
             // "fmt_map": "35/640000/9/0/115,18/512000/9/0/115,34/0/9/0/115,5/0/7/0/0"
