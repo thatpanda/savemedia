@@ -16,7 +16,7 @@ namespace SaveMedia
             InitializeComponent();
 
             mTitle.Text = SaveMedia.Program.Title + " " + SaveMedia.Program.TitleVersion;
-            mDate.Text = SaveMedia.Program.Date;
+            mDate.Text = Utility.FileUtils.RetrieveLinkerTimestamp().ToLongDateString();
 
             mCopyright.Text = SaveMedia.Program.Copyright;
         }
