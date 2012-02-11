@@ -3,7 +3,7 @@
 
 2012-02-06 	v1.7.6
 ==========
-
+~ requires .NET Framework 4.0
 ~ fix support for youtube
 ~ fix support for youku
 ~ small UI tweak
