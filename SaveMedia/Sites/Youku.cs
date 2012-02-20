@@ -308,7 +308,7 @@ namespace SaveMedia.Sites
                 if( StringUtils.StringBetween( theSegment, "\"no\":\"", "\"", out theSegmentNumber ) ||
                     StringUtils.StringBetween( theSegment, "\"no\":", ",", out theSegmentNumber ) )
                 {
-                    theSegmentNumber = String.Format( "{0:X2}", Convert.ToInt32( theSegmentNumber, 16 ) );
+                    theSegmentNumber = String.Format( "{0:X2}", Convert.ToInt32( theSegmentNumber, 10 ) );
                     String theFileSegmentId = aFileId.Substring( 0, 8 ) + theSegmentNumber + aFileId.Substring( 10 );
                     aFileSegmentIds.Add( theFileSegmentId );
                 }
