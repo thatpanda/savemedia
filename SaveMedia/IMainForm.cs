@@ -9,19 +9,20 @@ namespace SaveMedia
         // Properties
         // ==================================
 
-        ComboBox ConversionComboBox{ get; }
-
-        int ConversionProgress{ set; }
+        int ConversionProgress { set; }
         int DownloadProgress { set; }
         bool InputEnabled { set; }
-        String StatusMessage{ set; }
-        String ThumbnailPath{ set; }
+        ConverterTag SelectedConverter { get; }
+        String StatusMessage { set; }
+        String ThumbnailPath { set; }
 
         IWin32Window Win32Window{ get; }
 
         // ==================================
         // Functions
         // ==================================
+
+        void Initialize( params ConverterTag[] aConverters );
 
         void ChangeLayout( String aPhase );
 

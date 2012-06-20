@@ -29,14 +29,15 @@
         private void InitializeComponent()
         {
             System.Windows.Forms.FlowLayoutPanel mMainLayout;
+            System.Windows.Forms.Label theUrlLabel;
+            System.Windows.Forms.Label theConversionLabel;
             System.Windows.Forms.TableLayoutPanel theMediaInfoLayout;
             System.Windows.Forms.FlowLayoutPanel theMediaInfoLayout2;
             System.Windows.Forms.TableLayoutPanel theTableLayout;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.mUrlGroupBox = new System.Windows.Forms.GroupBox();
-            this.mUrl = new System.Windows.Forms.TextBox();
-            this.mConversionGroupBox = new System.Windows.Forms.GroupBox();
+            this.mInputLayout = new System.Windows.Forms.TableLayoutPanel();
             this.mConversion = new System.Windows.Forms.ComboBox();
+            this.mUrl = new System.Windows.Forms.TextBox();
             this.mMediaInfoGroupBox = new System.Windows.Forms.GroupBox();
             this.mThumbnail = new System.Windows.Forms.PictureBox();
             this.mTitleLabel = new System.Windows.Forms.Label();
@@ -52,12 +53,13 @@
             this.mOptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mAboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             mMainLayout = new System.Windows.Forms.FlowLayoutPanel();
+            theUrlLabel = new System.Windows.Forms.Label();
+            theConversionLabel = new System.Windows.Forms.Label();
             theMediaInfoLayout = new System.Windows.Forms.TableLayoutPanel();
             theMediaInfoLayout2 = new System.Windows.Forms.FlowLayoutPanel();
             theTableLayout = new System.Windows.Forms.TableLayoutPanel();
             mMainLayout.SuspendLayout();
-            this.mUrlGroupBox.SuspendLayout();
-            this.mConversionGroupBox.SuspendLayout();
+            this.mInputLayout.SuspendLayout();
             this.mMediaInfoGroupBox.SuspendLayout();
             theMediaInfoLayout.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mThumbnail)).BeginInit();
@@ -70,8 +72,7 @@
             // 
             mMainLayout.AutoSize = true;
             mMainLayout.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            mMainLayout.Controls.Add(this.mUrlGroupBox);
-            mMainLayout.Controls.Add(this.mConversionGroupBox);
+            mMainLayout.Controls.Add(this.mInputLayout);
             mMainLayout.Controls.Add(this.mMediaInfoGroupBox);
             mMainLayout.Controls.Add(this.mProgressBar);
             mMainLayout.Controls.Add(theTableLayout);
@@ -80,41 +81,29 @@
             mMainLayout.Margin = new System.Windows.Forms.Padding(0);
             mMainLayout.Name = "mMainLayout";
             mMainLayout.Padding = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            mMainLayout.Size = new System.Drawing.Size(398, 365);
+            mMainLayout.Size = new System.Drawing.Size(398, 333);
             mMainLayout.TabIndex = 3;
             mMainLayout.WrapContents = false;
             // 
-            // mUrlGroupBox
+            // mInputLayout
             // 
-            this.mUrlGroupBox.AutoSize = true;
-            this.mUrlGroupBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.mUrlGroupBox.Controls.Add(this.mUrl);
-            this.mUrlGroupBox.Location = new System.Drawing.Point(9, 3);
-            this.mUrlGroupBox.Name = "mUrlGroupBox";
-            this.mUrlGroupBox.Size = new System.Drawing.Size(380, 58);
-            this.mUrlGroupBox.TabIndex = 0;
-            this.mUrlGroupBox.TabStop = false;
-            this.mUrlGroupBox.Text = "URL:";
-            // 
-            // mUrl
-            // 
-            this.mUrl.Location = new System.Drawing.Point(6, 19);
-            this.mUrl.Name = "mUrl";
-            this.mUrl.Size = new System.Drawing.Size(368, 20);
-            this.mUrl.TabIndex = 1;
-            this.mUrl.TextChanged += new System.EventHandler(this.mUrl_TextChanged);
-            // 
-            // mConversionGroupBox
-            // 
-            this.mConversionGroupBox.AutoSize = true;
-            this.mConversionGroupBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.mConversionGroupBox.Controls.Add(this.mConversion);
-            this.mConversionGroupBox.Location = new System.Drawing.Point(9, 67);
-            this.mConversionGroupBox.Name = "mConversionGroupBox";
-            this.mConversionGroupBox.Size = new System.Drawing.Size(380, 59);
-            this.mConversionGroupBox.TabIndex = 1;
-            this.mConversionGroupBox.TabStop = false;
-            this.mConversionGroupBox.Text = "Conversion:";
+            this.mInputLayout.AutoSize = true;
+            this.mInputLayout.ColumnCount = 1;
+            this.mInputLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.mInputLayout.Controls.Add(this.mConversion, 0, 4);
+            this.mInputLayout.Controls.Add(this.mUrl, 0, 1);
+            this.mInputLayout.Controls.Add(theUrlLabel, 0, 0);
+            this.mInputLayout.Controls.Add(theConversionLabel, 0, 3);
+            this.mInputLayout.Location = new System.Drawing.Point(9, 3);
+            this.mInputLayout.Name = "mInputLayout";
+            this.mInputLayout.RowCount = 5;
+            this.mInputLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.mInputLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.mInputLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 12F));
+            this.mInputLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.mInputLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.mInputLayout.Size = new System.Drawing.Size(374, 91);
+            this.mInputLayout.TabIndex = 7;
             // 
             // mConversion
             // 
@@ -125,17 +114,43 @@
             "Do not convert file",
             "MPEG-1 Audio Layer 3 (*.mp3)",
             "Windows Media Video (*.wmv)"});
-            this.mConversion.Location = new System.Drawing.Point(6, 19);
+            this.mConversion.Location = new System.Drawing.Point(3, 67);
             this.mConversion.Name = "mConversion";
             this.mConversion.Size = new System.Drawing.Size(368, 21);
-            this.mConversion.TabIndex = 2;
+            this.mConversion.TabIndex = 3;
+            // 
+            // mUrl
+            // 
+            this.mUrl.Location = new System.Drawing.Point(3, 16);
+            this.mUrl.Name = "mUrl";
+            this.mUrl.Size = new System.Drawing.Size(368, 20);
+            this.mUrl.TabIndex = 1;
+            this.mUrl.TextChanged += new System.EventHandler(this.mUrl_TextChanged);
+            // 
+            // theUrlLabel
+            // 
+            theUrlLabel.AutoSize = true;
+            theUrlLabel.Location = new System.Drawing.Point(3, 0);
+            theUrlLabel.Name = "theUrlLabel";
+            theUrlLabel.Size = new System.Drawing.Size(32, 13);
+            theUrlLabel.TabIndex = 0;
+            theUrlLabel.Text = "URL:";
+            // 
+            // theConversionLabel
+            // 
+            theConversionLabel.AutoSize = true;
+            theConversionLabel.Location = new System.Drawing.Point(3, 51);
+            theConversionLabel.Name = "theConversionLabel";
+            theConversionLabel.Size = new System.Drawing.Size(63, 13);
+            theConversionLabel.TabIndex = 2;
+            theConversionLabel.Text = "Conversion:";
             // 
             // mMediaInfoGroupBox
             // 
             this.mMediaInfoGroupBox.AutoSize = true;
             this.mMediaInfoGroupBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.mMediaInfoGroupBox.Controls.Add(theMediaInfoLayout);
-            this.mMediaInfoGroupBox.Location = new System.Drawing.Point(9, 132);
+            this.mMediaInfoGroupBox.Location = new System.Drawing.Point(9, 100);
             this.mMediaInfoGroupBox.MinimumSize = new System.Drawing.Size(380, 115);
             this.mMediaInfoGroupBox.Name = "mMediaInfoGroupBox";
             this.mMediaInfoGroupBox.Size = new System.Drawing.Size(380, 134);
@@ -232,7 +247,7 @@
             // mProgressBar
             // 
             this.mProgressBar.Dock = System.Windows.Forms.DockStyle.Top;
-            this.mProgressBar.Location = new System.Drawing.Point(9, 278);
+            this.mProgressBar.Location = new System.Drawing.Point(9, 246);
             this.mProgressBar.Margin = new System.Windows.Forms.Padding(3, 9, 3, 3);
             this.mProgressBar.Name = "mProgressBar";
             this.mProgressBar.Size = new System.Drawing.Size(380, 30);
@@ -251,7 +266,7 @@
             theTableLayout.Controls.Add(this.mOkButton, 2, 0);
             theTableLayout.Controls.Add(this.mCancelButton, 3, 0);
             theTableLayout.Dock = System.Windows.Forms.DockStyle.Top;
-            theTableLayout.Location = new System.Drawing.Point(6, 320);
+            theTableLayout.Location = new System.Drawing.Point(6, 288);
             theTableLayout.Margin = new System.Windows.Forms.Padding(0, 9, 0, 9);
             theTableLayout.Name = "theTableLayout";
             theTableLayout.RowCount = 1;
@@ -357,9 +372,8 @@
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             mMainLayout.ResumeLayout(false);
             mMainLayout.PerformLayout();
-            this.mUrlGroupBox.ResumeLayout(false);
-            this.mUrlGroupBox.PerformLayout();
-            this.mConversionGroupBox.ResumeLayout(false);
+            this.mInputLayout.ResumeLayout(false);
+            this.mInputLayout.PerformLayout();
             this.mMediaInfoGroupBox.ResumeLayout(false);
             this.mMediaInfoGroupBox.PerformLayout();
             theMediaInfoLayout.ResumeLayout(false);
@@ -377,9 +391,7 @@
         }
 
         #endregion       
-        
-        private System.Windows.Forms.GroupBox mUrlGroupBox;
-        private System.Windows.Forms.GroupBox mConversionGroupBox;
+
         private System.Windows.Forms.ComboBox mConversion;
         private System.Windows.Forms.Button mDownloadButton;
         private System.Windows.Forms.GroupBox mMediaInfoGroupBox;
@@ -396,6 +408,7 @@
         private System.Windows.Forms.Label mLocationLabel;
         private System.Windows.Forms.ToolStripMenuItem mOptionsToolStripMenuItem;
         private System.Windows.Forms.Label mQualityLabel;
+        private System.Windows.Forms.TableLayoutPanel mInputLayout;
     }
 }
 

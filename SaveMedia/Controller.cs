@@ -50,6 +50,26 @@ namespace SaveMedia
         {
             mUI = aUI;
 
+            if( this.ConverterExists )
+            {
+                // TODO: configurable conversions
+                mUI.Initialize( new ConverterTag( "Do not convert file",
+                                                  String.Empty,
+                                                  String.Empty ),
+                                new ConverterTag( "MPEG-1 Audio Layer 3 (*.mp3)",
+                                                  ".mp3",
+                                                  "-y -i \"{0}\" -ar 44100 -ab 192k -ac 2 \"{1}\"" ),
+                                new ConverterTag( "Windows Media Video (*.wmv)",
+                                                  ".wmv",
+                                                  "-y -i \"{0}\" -vcodec wmv2 -sameq -acodec mp2 -ar 44100 -ab 192k -f avi \"{1}\"" ) );
+            }
+            else
+            {
+                mUI.Initialize( new ConverterTag( "Plug-in not found",
+                                                  String.Empty,
+                                                  String.Empty ) );
+            }
+
             mWebClient = new System.Net.WebClient();
             //mWebClient.CachePolicy = new System.Net.Cache.RequestCachePolicy( System.Net.Cache.RequestCacheLevel.Revalidate );
             mWebClient.Encoding = System.Text.Encoding.UTF8;
@@ -127,7 +147,6 @@ namespace SaveMedia
 
         public void ParseUrl( String aUrl )
         {
-
             Uri theUrl;
             bool isValid = Uri.TryCreate( aUrl, UriKind.Absolute, out theUrl );
 
@@ -219,7 +238,7 @@ namespace SaveMedia
             }
             else
             {
-                if( mUI.ConversionComboBox.SelectedIndex == 0 )
+                if( !mUI.SelectedConverter.IsValid )
                 {
                     mUI.InputEnabled = true;
                     return;
@@ -594,7 +613,7 @@ namespace SaveMedia
             }
             else
             {
-                if( mUI.ConversionComboBox.SelectedIndex != 0 )
+                if( mUI.SelectedConverter.IsValid )
                 {
                     mConvertQueue.Add( mDownloadDestination );
                 }
@@ -620,7 +639,8 @@ namespace SaveMedia
 
         private void ConvertFile( String aSource, String aDestination )
         {
-            if( mUI.ConversionComboBox.SelectedIndex == 0 )
+            ConverterTag theConverter = mUI.SelectedConverter;
+            if( !theConverter.IsValid )
             {
                 return;
             }
@@ -631,33 +651,17 @@ namespace SaveMedia
                 return;
             }
 
-            mConversionDestination = aDestination;
-
-            String theExtension = String.Empty;
-            String theArguments = String.Empty;
-
-            if( mUI.ConversionComboBox.SelectedIndex == 1 )
-            {
-                theExtension = ".mp3";
-                theArguments = "-y -i \"{0}\" -ar 44100 -ab 192k -ac 2 \"{1}\"";
-            }
-            else if( mUI.ConversionComboBox.SelectedIndex == 2 )
-            {
-                theExtension = ".wmv";
-                theArguments = "-y -i \"{0}\" -vcodec wmv2 -sameq -acodec mp2 -ar 44100 -ab 192k -f avi \"{1}\"";
-            }
-
             mConversionTempInPath = System.IO.Path.GetTempFileName();
             mConversionTempOutPath = System.IO.Path.GetTempFileName();
 
-            mConversionDestination = System.IO.Path.ChangeExtension( aDestination, theExtension );
-            mConversionTempOutPath = System.IO.Path.ChangeExtension( mConversionTempOutPath, theExtension );
+            mConversionDestination = System.IO.Path.ChangeExtension( aDestination, theConverter.FileExtension );
+            mConversionTempOutPath = System.IO.Path.ChangeExtension( mConversionTempOutPath, theConverter.FileExtension );
 
             System.IO.File.Copy( aSource, mConversionTempInPath, true );
 
             System.Diagnostics.ProcessStartInfo theStartInfo = new System.Diagnostics.ProcessStartInfo( gcFFmpegPath );
 
-            theStartInfo.Arguments = String.Format( theArguments, mConversionTempInPath, mConversionTempOutPath );
+            theStartInfo.Arguments = String.Format( theConverter.FFmpegArg, mConversionTempInPath, mConversionTempOutPath );
             theStartInfo.CreateNoWindow = true;
             theStartInfo.UseShellExecute = false;
             theStartInfo.RedirectStandardError = true;

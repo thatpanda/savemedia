@@ -15,7 +15,7 @@ namespace SaveMedia
     public partial class MainForm : Form, IMainForm
     {
         private Controller mController = null;
-
+        private CustomComboBox mConversionComboBox;
         private String mDefaultTitle;
 
         delegate void ChangeLayoutCallBack( String aPhase );
@@ -26,46 +26,26 @@ namespace SaveMedia
         {
             InitializeComponent();
 
-            mConversion = new CustomComboBox();
-            mConversionGroupBox.Controls.Clear();
-            mConversionGroupBox.Controls.Add( mConversion );
-            mConversion.DrawMode = DrawMode.OwnerDrawFixed;
-            mConversion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            mConversion.FormattingEnabled = true;
-            mConversion.ItemHeight = 13;
-            mConversion.Items.AddRange( new object[] {
-                "Do not convert file",
-                "MPEG-1 Audio Layer 3 (*.mp3)",
-                "Windows Media Video (*.wmv)"} );
-            mConversion.Location = new System.Drawing.Point( 6, 19 );
-            mConversion.Name = "mConversion";
-            mConversion.Size = new System.Drawing.Size( 368, 21 );
-            mConversion.TabIndex = 2;
-
-            ( (CustomComboBox) mConversion ).BuildImageList();
+            mConversionComboBox = new CustomComboBox();
+            mConversionComboBox.Name = "mConversion";
+            mConversionComboBox.Size = new System.Drawing.Size( 368, 21 );
+            mConversionComboBox.TabIndex = 4;
+            
+            mInputLayout.Controls.Remove( mConversion );
+            mConversion = mConversionComboBox;
+            mInputLayout.Controls.Add( mConversion, 0, 4 );
 
             mDefaultTitle = SaveMedia.Program.Title + " " + SaveMedia.Program.TitleVersion;
             this.Text = mDefaultTitle;
+            
+            this.StatusMessage = String.Empty;
 
             mController = new Controller( this );
-
-            if( !mController.ConverterExists )
-            {
-                mConversion.Items.Clear();
-                mConversion.Items.Add( "Plug-in not found" );
-                mConversion.Enabled = false;
-            }
-            
-            mConversion.SelectedIndex = 0;
-            this.StatusMessage = String.Empty;
         }
 
-        public ComboBox ConversionComboBox
+        public ConverterTag SelectedConverter
         {
-            get
-            {
-                return (CustomComboBox) mConversion;
-            }
+            get { return (ConverterTag)mConversionComboBox.SelectedItem; }
         }
 
         public IWin32Window Win32Window
@@ -182,6 +162,11 @@ namespace SaveMedia
 
                 this.StatusMessage = "Converting..." + value.ToString() + "%";
             }
+        }
+
+        public void Initialize( params ConverterTag[] aConverters )
+        {
+            mConversionComboBox.Initialize( aConverters );
         }
 
         public void ChangeLayout( String aPhase )
@@ -342,8 +327,7 @@ namespace SaveMedia
             //mMediaInfoGroupBox.MinimumSize = new Size( mMediaInfoGroupBox.Width, theNewHeight );
 
             this.SuspendLayout();
-            mUrlGroupBox.Visible = !aIsVisible;
-            mConversionGroupBox.Visible = !aIsVisible;
+            mInputLayout.Visible = !aIsVisible;
             mMediaInfoGroupBox.Visible = aIsVisible;
             mThumbnail.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             mThumbnail.Image = mThumbnail.InitialImage;
