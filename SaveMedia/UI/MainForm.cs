@@ -14,14 +14,6 @@ namespace SaveMedia
 {
     public partial class MainForm : Form, IMainForm
     {
-        private Controller mController = null;
-        private CustomComboBox mConversionComboBox;
-        private String mDefaultTitle;
-
-        delegate void ChangeLayoutCallBack( String aPhase );
-        delegate void NotifyUserCallBack();
-        delegate DialogResult PromptForUpdateCallBack();
-
         public MainForm()
         {
             InitializeComponent();
@@ -43,115 +35,9 @@ namespace SaveMedia
             mController = new Controller( this );
         }
 
-        public ConverterTag SelectedConverter
-        {
-            get { return (ConverterTag)mConversionComboBox.SelectedItem; }
-        }
-
-        public IWin32Window Win32Window
-        {
-            get
-            {
-                return this;
-            }
-        }
-
-        public DialogResult PromptForUpdate()
-        {
-            if( this.InvokeRequired )
-            {
-                PromptForUpdateCallBack theCallBack = new PromptForUpdateCallBack( PromptForUpdate );
-                return (DialogResult) this.Invoke( theCallBack );
-            }
-
-            return MessageBox.Show( this, "A newer version of SaveMedia is available.\n\nWould you like to download now?", "Updates", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1 );
-        }
-
-        private void mOkButton_Click( object sender, EventArgs e )
-        {
-            ChangeLayout( "OK clicked" );
-            mController.ClearTemporaryFiles();
-        }
-
-        private void mCancelButton_Click( object sender, EventArgs e )
-        {
-            mController.Abort();
-        }
-
-        private void mDownloadButton_Click( object sender, EventArgs e )
-        {
-            this.InputEnabled = false;
-
-            mController.ParseUrl( mUrl.Text );
-        }
-
-        public void DisplayMediaInfo( DownloadTag aTag )
-        {
-            if( String.IsNullOrEmpty( aTag.VideoTitle ) )
-            {
-                return;
-            }
-
-            mTitleLabel.Text = "Title: " + aTag.VideoTitle.Replace( "\\", "" );
-            mSizeLabel.Text = "Size: ??? MB";
-
-            if( String.IsNullOrEmpty( aTag.Quality ) )
-            {
-                mQualityLabel.Text = String.Empty;
-            }
-            else
-            {
-                mQualityLabel.Text = "Quality: " + aTag.Quality;
-            }
-
-            mLocationLabel.Text = String.Empty;
-
-            this.StatusMessage = "Ready to download";
-            MediaInfoVisible( true );
-        }
-
-        public void DownloadStarted( String aDestination )
-        {
-            this.DownloadProgress = 0;
-            this.Text = "0% - " + mDefaultTitle;
-            this.StatusMessage = "Downloading...";
-            //mLocationLabel.Text = "Location: " + aDestination;
-
-            mDownloadButton.Visible = false;
-            mCancelButton.Visible = true;
-        }
-
-        public void FileSize( String aValue )
-        {
-            mSizeLabel.Text = "Size: " + aValue;
-        }
-
-        public int DownloadProgress
-        {
-            set
-            {
-                this.Text = value + "% - " + mDefaultTitle;
-                mProgressBar.Value = value;
-            }
-        }
-
-        public void ConvertStarted()
-        {
-            this.ConversionProgress = 0;
-
-            mDownloadButton.Visible = false;
-            mCancelButton.Visible = true;
-        }
-
-        public String ThumbnailPath
-        {
-            set
-            {
-                mThumbnail.ImageLocation = value;
-                mThumbnail.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-                mThumbnail.Refresh();
-            }
-        }
+        // ==================================
+        // IMainForm Properties
+        // ==================================
 
         public int ConversionProgress
         {
@@ -163,6 +49,64 @@ namespace SaveMedia
                 this.StatusMessage = "Converting..." + value.ToString() + "%";
             }
         }
+
+        public int DownloadProgress
+        {
+            set
+            {
+                this.Text = value + "% - " + mDefaultTitle;
+                mProgressBar.Value = value;
+            }
+        }
+
+        public bool InputEnabled
+        {
+            set
+            {
+                mUrl.Enabled = value;
+                mConversion.Enabled = value && mController.ConverterExists;
+
+                if( value )
+                {
+                    String theNewUrl = ClipboardUtils.ReadUrl();
+                    if( !mUrl.Text.Equals( theNewUrl ) && !String.IsNullOrEmpty( theNewUrl ) )
+                    {
+                        mUrl.Text = ClipboardUtils.ReadUrl();
+                    }
+                    mUrl_TextChanged( this, new EventArgs() );
+                }
+                else
+                {
+                    mDownloadButton.Enabled = false;
+                }
+            }
+        }
+
+        public ConverterTag SelectedConverter
+        {
+            get { return (ConverterTag)mConversionComboBox.SelectedItem; }
+        }
+
+        public String StatusMessage { set { mStatus.Text = value; } }
+
+        public String ThumbnailPath
+        {
+            set
+            {
+                mThumbnail.ImageLocation = value;
+                mThumbnail.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+                mThumbnail.Refresh();
+            }
+        }
+
+        public IWin32Window Win32Window
+        {
+            get{ return this; }
+        }
+
+        // ==================================
+        // IMainForm Functions
+        // ==================================
 
         public void Initialize( params ConverterTag[] aConverters )
         {
@@ -278,46 +222,77 @@ namespace SaveMedia
             this.PerformLayout();
         }
 
-        private void mUrl_TextChanged( object sender, EventArgs e )
+        public void ConvertStarted()
         {
-            Uri theUrl;
-            mDownloadButton.Enabled = Uri.TryCreate( mUrl.Text, UriKind.Absolute, out theUrl );
+            this.ConversionProgress = 0;
 
-            if( mDownloadButton.Enabled )
-            {
-                if( System.IO.File.Exists( mUrl.Text ) )
-                {
-                    mDownloadButton.Text = "Convert";
-                }
-                else
-                {
-                    mDownloadButton.Text = "Download";
-                }
-            }
+            mDownloadButton.Visible = false;
+            mCancelButton.Visible = true;
         }
 
-        public bool InputEnabled
+        public void DisplayMediaInfo( DownloadTag aTag )
         {
-            set
+            if( String.IsNullOrEmpty( aTag.VideoTitle ) )
             {
-                mUrl.Enabled = value;
-                mConversion.Enabled = value && mController.ConverterExists;
-
-                if( value )
-                {
-                    String theNewUrl = ClipboardUtils.ReadUrl();
-                    if( !mUrl.Text.Equals( theNewUrl ) && !String.IsNullOrEmpty( theNewUrl ) )
-                    {
-                        mUrl.Text = ClipboardUtils.ReadUrl();
-                    }
-                    mUrl_TextChanged( this, new EventArgs() );
-                }
-                else
-                {
-                    mDownloadButton.Enabled = false;
-                }
+                return;
             }
+
+            mTitleLabel.Text = "Title: " + aTag.VideoTitle.Replace( "\\", "" );
+            mSizeLabel.Text = "Size: ??? MB";
+
+            if( String.IsNullOrEmpty( aTag.Quality ) )
+            {
+                mQualityLabel.Text = String.Empty;
+            }
+            else
+            {
+                mQualityLabel.Text = "Quality: " + aTag.Quality;
+            }
+
+            mLocationLabel.Text = String.Empty;
+
+            this.StatusMessage = "Ready to download";
+            MediaInfoVisible( true );
         }
+
+        public void DownloadStarted( String aDestination )
+        {
+            this.DownloadProgress = 0;
+            this.Text = "0% - " + mDefaultTitle;
+            this.StatusMessage = "Downloading...";
+            //mLocationLabel.Text = "Location: " + aDestination;
+
+            mDownloadButton.Visible = false;
+            mCancelButton.Visible = true;
+        }
+
+        public void FileSize( String aValue )
+        {
+            mSizeLabel.Text = "Size: " + aValue;
+        }
+
+        public DialogResult PromptForUpdate()
+        {
+            if( this.InvokeRequired )
+            {
+                PromptForUpdateCallBack theCallBack = new PromptForUpdateCallBack( PromptForUpdate );
+                return (DialogResult) this.Invoke( theCallBack );
+            }
+
+            return MessageBox.Show( this, "A newer version of SaveMedia is available.\n\nWould you like to download now?", "Updates", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1 );
+        }
+
+        // ==================================
+        // Delegates
+        // ==================================
+
+        delegate void ChangeLayoutCallBack( String aPhase );
+        delegate void NotifyUserCallBack();
+        delegate DialogResult PromptForUpdateCallBack();
+
+        // ==================================
+        // Functions
+        // ==================================
 
         private void MediaInfoVisible( bool aIsVisible )
         {
@@ -336,13 +311,6 @@ namespace SaveMedia
             this.PerformLayout();
         }
 
-        public String StatusMessage{ set { mStatus.Text = value; } }
-
-        private void MainForm_FormClosed( object sender, FormClosedEventArgs e )
-        {
-            mController.ClearTemporaryFiles();
-        }
-
         private void NotifyUser()
         {
             if( this.InvokeRequired )
@@ -356,6 +324,51 @@ namespace SaveMedia
             {
                 FormUtils.FlashWindow( this );
             }
+        }
+
+        // ==================================
+        // Event Handlers
+        // ==================================
+
+        private void mOkButton_Click( object sender, EventArgs e )
+        {
+            ChangeLayout( "OK clicked" );
+            mController.ClearTemporaryFiles();
+        }
+
+        private void mCancelButton_Click( object sender, EventArgs e )
+        {
+            mController.Abort();
+        }
+
+        private void mDownloadButton_Click( object sender, EventArgs e )
+        {
+            this.InputEnabled = false;
+
+            mController.ParseUrl( mUrl.Text );
+        }
+
+        private void mUrl_TextChanged( object sender, EventArgs e )
+        {
+            Uri theUrl;
+            mDownloadButton.Enabled = Uri.TryCreate( mUrl.Text, UriKind.Absolute, out theUrl );
+
+            if( mDownloadButton.Enabled )
+            {
+                if( System.IO.File.Exists( mUrl.Text ) )
+                {
+                    mDownloadButton.Text = "Convert";
+                }
+                else
+                {
+                    mDownloadButton.Text = "Download";
+                }
+            }
+        }
+
+        private void MainForm_FormClosed( object sender, FormClosedEventArgs e )
+        {
+            mController.ClearTemporaryFiles();
         }
 
         private void mAboutToolStripMenuItem_Click( object sender, EventArgs e )
@@ -378,5 +391,13 @@ namespace SaveMedia
                 mUrl.Text = theNewUrl;
             }
         }
+
+        // ==================================
+        // Members
+        // ==================================
+
+        private Controller mController = null;
+        private CustomComboBox mConversionComboBox;
+        private String mDefaultTitle;
     }
 }
