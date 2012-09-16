@@ -13,7 +13,7 @@ namespace SaveMedia
         public const String AssemblyVersion = "1.0.0.0";
         public const String FileVersion     = "1.7.7.0";
         public const String TitleVersion    = "1.7.7";
-        public const String UserAgent       = "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.15) Gecko/20110303 Firefox/3.6.15 (.NET CLR 3.5.30729)";
+        public const String UserAgent       = "Mozilla/5.0 (Windows NT 6.1; rv:15.0) Gecko/20100101 Firefox/15.0.1";
 
         /// <summary>
         /// The main entry point for the application.
