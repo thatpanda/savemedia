@@ -5,7 +5,7 @@ namespace Utility
 {
     static class UpdateUtils
     {
-        private const String gcUpdatesXmlUrl = "http://savemedia.googlecode.com/files/Updates.xml";
+        private const String gcUpdatesXmlUrl = "http://savemedia.googlecode.com/hg/Updates.xml";
         private static String mUpdatesXmlPath;
         private static bool mAlreadyCheckedForUpdates;
 
@@ -119,7 +119,7 @@ namespace Utility
             }
 
             String theLatestVersion = mSettings[ "Version" ];
-            String theCurrentVersion = SaveMedia.Program.TitleVersion;
+            String theCurrentVersion = SaveMedia.Program.FileVersion;
 
             if( theLatestVersion.Equals( theCurrentVersion, StringComparison.Ordinal ) )
             {
