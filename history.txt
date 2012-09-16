@@ -1,11 +1,22 @@
 ﻿SaveMedia
 © 2012 Eric Choy
 
+2012-09-17 	v1.7.7
+==========
+~ fixed support for youtube
+~ fixed support for Youku where download fails at the 10th segment
+~ fixed .NET 2.0 version of SaveMedia keep prompting for software update (it was temporary fixed by disabling update on the server)
+~ added ability to extract build date from assembly
+~ updated UserAgent
+~ code refactoring
+~ small UI tweak
+
+
 2012-02-06 	v1.7.6
 ==========
-~ requires .NET Framework 4.0
-~ fix support for youtube
-~ fix support for youku
+~ introduced .NET 4.0 and .NET 2.0 version of SaveMedia
+~ fixed support for youtube
+~ fixed support for youku
 ~ small UI tweak
 
 
