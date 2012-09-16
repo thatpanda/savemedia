@@ -86,7 +86,7 @@ namespace SaveMedia.Sites
             theFmtStreamMap = "," + theFmtStreamMap;
 
             String[] theSplitStr = new String[1];
-            theSplitStr[ 0 ] = ",url=";
+            theSplitStr[ 0 ] = "&url=";
             String[] theUrls = theFmtStreamMap.Split( theSplitStr, StringSplitOptions.RemoveEmptyEntries );
             if( theUrls.Length == 0 )
             {
@@ -126,6 +126,14 @@ namespace SaveMedia.Sites
                     }
                 }
             }
+
+            String theVideoSignature;
+            if( !StringUtils.StringBetween( theSourceCode, "signature=", "\\u0026", out theVideoSignature ) )
+            {
+                aError = "Failed to extract video's signature";
+                return;
+            }
+            theUrl += "&signature=" + theVideoSignature;
 
             //System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( theFullScreenUrl.Query );
 
