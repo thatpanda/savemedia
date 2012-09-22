@@ -11,7 +11,7 @@ namespace Utility
         public struct SHFILEINFO
         {
             public IntPtr hIcon;            // out: icon
-            public IntPtr iIcon;            // out: icon index
+            public int iIcon;               // out: icon index
             public uint dwAttributes;       // out: SFGAO_ flags
             [MarshalAs( UnmanagedType.ByValTStr, SizeConst = 260 )]
             public string szDisplayName;    // out: display name (or path)
