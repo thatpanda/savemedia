@@ -1,9 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SaveMedia.Sites
 {
-    static class Brightcove
+    class Brightcove : ISite
     {
+        public bool Support( ref Uri aUrl )
+        {
+            return aUrl.OriginalString.StartsWith( "http://link.brightcove.com" );
+        }
+
+        public void TryParse( ref Uri aUrl,
+                              ref List<DownloadTag> aDownloadQueue,
+                              ref IMainForm aUI,
+                              out String aError )
+        {
+            aError = String.Empty;
+            aError = "Sorry, this site is not supported yet";
+        }
+
         public static void TryParse( ref Uri    aUrl,
                                      out String aVideoTitle,
                                      out Uri    aVideoUrl,

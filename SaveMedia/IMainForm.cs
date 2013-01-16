@@ -34,6 +34,8 @@ namespace SaveMedia
 
         void FileSize( String aValue );
 
+        bool PromptForFolderDestination( ref String aDescription, out String aDestination );
+
         DialogResult PromptForUpdate();
     }
 }

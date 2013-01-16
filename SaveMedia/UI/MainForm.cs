@@ -271,6 +271,19 @@ namespace SaveMedia
             mSizeLabel.Text = "Size: " + aValue;
         }
 
+        public bool PromptForFolderDestination( ref String aDescription, out String aDestination )
+        {
+            aDestination = String.Empty;
+
+            FolderBrowserDialog theDialog = new FolderBrowserDialog();
+            theDialog.Description = aDescription;
+
+            DialogResult theDialogResult = theDialog.ShowDialog( this.Win32Window );
+            aDestination = theDialog.SelectedPath;
+
+            return theDialogResult == DialogResult.OK;
+        }
+
         public DialogResult PromptForUpdate()
         {
             if( this.InvokeRequired )

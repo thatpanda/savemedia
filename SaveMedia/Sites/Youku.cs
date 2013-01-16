@@ -8,11 +8,17 @@ using Utility;
 
 namespace SaveMedia.Sites
 {
-    static class Youku
+    class Youku : ISite
     {
-        public static void TryParse( ref Uri aUrl,
-                                     ref List<DownloadTag> aDownloadQueue,
-                                     out String aError )
+        public bool Support( ref Uri aUrl )
+        {
+            return aUrl.OriginalString.StartsWith( "http://v.youku.com" );
+        }
+
+        public void TryParse( ref Uri aUrl,
+                              ref List<DownloadTag> aDownloadQueue,
+                              ref IMainForm aUI,
+                              out String aError )
         {
             aError = String.Empty;
 

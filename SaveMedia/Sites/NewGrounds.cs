@@ -5,11 +5,17 @@ using Utility;
 
 namespace SaveMedia.Sites
 {
-    static class NewGrounds
+    class NewGrounds : ISite
     {
-        public static void TryParse( ref Uri aUrl,
-                                     ref List<DownloadTag> aDownloadQueue,
-                                     out String aError )
+        public bool Support( ref Uri aUrl )
+        {
+            return aUrl.OriginalString.StartsWith( "http://www.newgrounds.com" );
+        }
+
+        public void TryParse( ref Uri aUrl,
+                              ref List<DownloadTag> aDownloadQueue,
+                              ref IMainForm aUI,
+                              out String aError )
         {
             aError = String.Empty;
 

@@ -38,11 +38,10 @@ namespace SaveMedia
 
         private double  mDuration;
 
-        private String  mPlaylistDestination;
-
         private int     mWaitingTime;
         private Timer   mDelayTimer;
 
+        private System.Collections.Generic.List< Sites.ISite > mSupportedSites;
         private System.Collections.Generic.List< DownloadTag > mDownloadQueue;
         private System.Collections.Generic.List< String > mConvertQueue;
 
@@ -86,8 +85,13 @@ namespace SaveMedia
             mDelayTimer.Interval = 1000;
             mDelayTimer.Tick += new EventHandler( mDelayTimer_Tick );
 
-            mDownloadQueue = new List<DownloadTag>();
-            mConvertQueue = new List<String>();
+            mSupportedSites = new List<Sites.ISite>();
+            mSupportedSites.Add( new Sites.YouTube() );
+            mSupportedSites.Add( new Sites.Youku() );
+            mSupportedSites.Add( new Sites.Vimeo() );
+
+            mDownloadQueue = new List< DownloadTag >();
+            mConvertQueue = new List< String >();
 
             UpdateUtils.StartupCheckIfNeeded( mUI );
         }
@@ -159,95 +163,54 @@ namespace SaveMedia
 			
 			mDownloadQueue.Clear();
             mConvertQueue.Clear();
-            mPlaylistDestination = String.Empty;
 
             ParseUrl( ref theUrl );
         }
 
-        public void ParseUrl( ref Uri aUrl )
+        private void ParseUrl( ref Uri aUrl )
         {
-            if( aUrl.OriginalString.StartsWith( "http://" ) )
+            foreach( Sites.ISite theSite in mSupportedSites )
             {
-                if( aUrl.OriginalString.StartsWith( "http://www.youtube.com" ) )
-                {
-                    YouTubeVideoParser( ref aUrl );
-                }
-                else if( aUrl.Host.EndsWith( ".rapidshare.com" ) )
-                {
-                    //DownloadRapidShareFile( ref aUrl );
-                    mUI.StatusMessage = "Sorry, this site is not supported";
-                    mUI.InputEnabled = true;
-                    return;
-                }
-                else
+                if( theSite.Support( ref aUrl ) )
                 {
                     mUI.StatusMessage = "Connecting to " + aUrl.Host;
 
                     String theError;
+                    theSite.TryParse( ref aUrl, ref mDownloadQueue, ref mUI, out theError );
 
-                    if( aUrl.OriginalString.StartsWith( "http://www.tudou.com" ) )
+                    if( String.IsNullOrEmpty( theError ) )
                     {
-                        //Sites.Tudou.TryParse( ref aUrl, ref mDownloadQueue, out theError );
-                        mUI.StatusMessage = "Sorry, this site is no longer supported";
-                        mUI.InputEnabled = true;
-                        return;
-                    }
-                    else if( aUrl.OriginalString.StartsWith( "http://v.youku.com" ) )
-                    {
-                        Sites.Youku.TryParse( ref aUrl, ref mDownloadQueue, out theError );
-                    }
-                    else if( aUrl.OriginalString.StartsWith( "http://www.newgrounds.com" ) )
-                    {
-                        Sites.NewGrounds.TryParse( ref aUrl, ref mDownloadQueue, out theError );
-                    }
-                    else if( aUrl.OriginalString.StartsWith( "http://vimeo.com" ) ||
-                             aUrl.OriginalString.StartsWith( "http://www.vimeo.com" ) )
-                    {
-                        Sites.Vimeo.TryParse( ref aUrl, ref mDownloadQueue, out theError );
-                    }
-                    else if( aUrl.OriginalString.StartsWith( "http://www.collegehumor.com" ) )
-                    {
-                        Sites.CollegeHumor.TryParse( ref aUrl, ref mDownloadQueue, out theError );
-                    }
-                    else if( aUrl.OriginalString.StartsWith( "http://link.brightcove.com" ) )
-                    {
-                        //DownloadBrightcoveVideo( ref theUrl );
-                        mUI.StatusMessage = "Sorry, this site is not supported yet";
-                        mUI.InputEnabled = true;
-                        return;
+                        StartDownload();
                     }
                     else
                     {
-                        String theFilename = System.IO.Path.GetFileName( aUrl.OriginalString );
-                        String theFileExt = System.IO.Path.GetExtension( aUrl.OriginalString );
-                        String theFilePath = FileUtils.SaveFile( theFilename, theFileExt + "|*" + theFileExt, mUI.Win32Window );
-
-                        DownloadFile( aUrl, theFilePath );
-                        return;
-                    }
-
-                    if( !String.IsNullOrEmpty( theError ) )
-                    {
                         mUI.StatusMessage = theError;
                         mUI.InputEnabled = true;
-                        return;
                     }
 
-                    StartDownload();
+                    return;
                 }
+            }
+
+            if( aUrl.OriginalString.StartsWith( "http://" ) )
+            {
+                mUI.StatusMessage = "Connecting to " + aUrl.Host;
+
+                String theFilename = System.IO.Path.GetFileName( aUrl.OriginalString );
+                String theFileExt = System.IO.Path.GetExtension( aUrl.OriginalString );
+                String theFilePath = FileUtils.SaveFile( theFilename, theFileExt + "|*" + theFileExt, mUI.Win32Window );
+
+                DownloadFile( aUrl, theFilePath );
+            }
+            else if( mUI.SelectedConverter.IsValid &&
+                     !String.IsNullOrEmpty( aUrl.OriginalString ) &&
+                     System.IO.File.Exists( aUrl.OriginalString ) )
+            {
+                ConvertFile( aUrl.OriginalString, aUrl.OriginalString );
             }
             else
             {
-                if( !mUI.SelectedConverter.IsValid )
-                {
-                    mUI.InputEnabled = true;
-                    return;
-                }
-                else if( !String.IsNullOrEmpty( aUrl.OriginalString ) &&
-                         System.IO.File.Exists( aUrl.OriginalString ) )
-                {
-                    ConvertFile( aUrl.OriginalString, aUrl.OriginalString );
-                }
+                mUI.InputEnabled = true;
             }
         }
 
@@ -326,196 +289,6 @@ namespace SaveMedia
                     }
                 }
             }
-        }
-
-        private void DownloadRapidShareFile( ref Uri aUrl )
-        {
-            mDelayTimer.Stop();
-
-            mUI.StatusMessage = "Connecting to " + aUrl.Host;
-
-            DownloadTag theTag;
-
-            Sites.RapidShare.TryParse( ref aUrl, out theTag );
-
-            if( !String.IsNullOrEmpty( theTag.Error ) )
-            {
-                mUI.StatusMessage = theTag.Error;
-                mUI.InputEnabled = true;
-                return;
-            }
-
-            mWaitingTime = theTag.WaitingTime;
-            mDelayTimer.Start();
-
-            theTag.DownloadDestination = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension + "|*" + theTag.FileExtension, mUI.Win32Window );
-
-            if( String.IsNullOrEmpty( theTag.DownloadDestination ) )
-            {
-                mUI.ChangeLayout( "Cancel clicked" );
-                mDelayTimer.Stop();
-                ClearTemporaryFiles();
-                return;
-            }
-
-            mDownloadQueue.Add( theTag );
-
-            //mDownloadButton.Visible = false;
-            //mCancelButton.Visible = true;
-        }
-
-        private void YouTubeVideoParser( ref Uri aUrl )
-        {
-            if( aUrl.OriginalString.StartsWith( "http://www.youtube.com/view_play_list?" ) )
-            {
-                int thePageNumber = 1;
-                DownloadYouTubePlaylist( ref aUrl, thePageNumber );
-            }
-            else if( aUrl.OriginalString.StartsWith( "http://www.youtube.com/user/" ) )
-            {
-                int theLastSlashIndex = aUrl.OriginalString.LastIndexOf( "/" );
-
-                if( theLastSlashIndex == -1 )
-                {
-                    DownloadYouTubeVideo( ref aUrl );
-                }
-                else
-                {
-                    String thePlaylistId = aUrl.OriginalString.Substring( theLastSlashIndex + 1 );
-                    Uri thePlaylistUrl = new Uri( "http://www.youtube.com/view_play_list?p=" + thePlaylistId );
-                    YouTubeVideoParser( ref thePlaylistUrl );
-                }
-            }
-            else if( aUrl.OriginalString.StartsWith( "http://www.youtube.com/v/" ) )
-            {
-                String theNewUrlString = aUrl.OriginalString;
-                theNewUrlString = theNewUrlString.Replace( "http://www.youtube.com/v/", "http://www.youtube.com/watch?v=" );
-
-                Uri theNewUrl = new Uri( theNewUrlString );
-                ParseUrl( ref theNewUrl );
-            }
-            else
-            {
-                DownloadYouTubeVideo( ref aUrl );
-            }
-        }
-
-        private void DownloadYouTubePlaylist( ref Uri aUrl, int aPageNumber )
-        {
-            mUI.StatusMessage = "Connecting to " + aUrl.Host;
-
-            System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( aUrl.Query );
-            String thePlaylistId = theQueryStrings[ "p" ];
-            String thePageNumber = theQueryStrings[ "page" ];
-
-            if( String.IsNullOrEmpty( thePageNumber ) )
-            {
-                thePageNumber = "1";
-            }
-
-            if( aPageNumber == 1 &&
-                !thePageNumber.Equals( aPageNumber.ToString() ) )
-            {
-                Uri theFirstPage = new Uri( "http://www.youtube.com/view_play_list?p=" + thePlaylistId );
-                DownloadYouTubePlaylist( ref theFirstPage, 1 );
-                return;
-            }
-
-            String theSourceCode;
-            if( !NetUtils.DownloadString( aUrl, out theSourceCode ) )
-            {
-                mUI.StatusMessage = "Failed to connect to " + aUrl.Host;
-                mUI.InputEnabled = true;
-                return;
-            }
-
-            String thePlaylistTitle;
-            if( !StringUtils.StringBetween( theSourceCode, "<h1>", "</h1>", out thePlaylistTitle ) )
-            {
-                mUI.StatusMessage = "Failed to analyze playlist";
-                mUI.InputEnabled = true;
-                return;
-            }
-
-            // http://msdn.microsoft.com/en-us/library/az24scfc.aspx
-            String theUrlPattern = "<div\\s+class=\"video-short-title\"\\s*>(\\s|\n)+<a\\s.*href=\"([^\"]+)\"";
-            Match theUrlMatch = Regex.Match( theSourceCode, theUrlPattern );
-
-            if( !theUrlMatch.Success )
-            {
-                mUI.StatusMessage = "Failed to analyze playlist";
-                mUI.InputEnabled = true;
-                return;
-            }
-
-            if( String.IsNullOrEmpty( mPlaylistDestination ) )
-            {
-                FolderBrowserDialog theDialog = new FolderBrowserDialog();
-                theDialog.Description = "Please select the destination for videos from:\n\n" + thePlaylistTitle;
-                if( theDialog.ShowDialog( mUI.Win32Window ) != DialogResult.OK )
-                {
-                    mUI.ChangeLayout( "Cancel clicked" );
-                    ClearTemporaryFiles();
-                    return;
-                }
-                mPlaylistDestination = theDialog.SelectedPath;
-            }
-
-            while( theUrlMatch.Success )
-            {
-                String thePartialUrl = theUrlMatch.Groups[ 2 ].ToString();
-                Uri theVideoUrl = new Uri( "http://" + aUrl.Host + thePartialUrl );
-
-                String theError;
-
-                Sites.YouTube.TryParse( ref theVideoUrl, ref mDownloadQueue, out theError );
-
-                if( !String.IsNullOrEmpty( theError ) )
-                {
-                    mUI.StatusMessage = theError;
-                    mUI.InputEnabled = true;
-                    return;
-                }
-
-                DownloadTag theTag = mDownloadQueue[ mDownloadQueue.Count - 1 ];
-                theTag.DownloadDestination = mPlaylistDestination + "\\" + FileUtils.FilenameCheck( theTag.FileName ) + ".flv";
-
-                theUrlMatch = theUrlMatch.NextMatch();
-            }
-
-            int theCurrentPageIndex = theSourceCode.IndexOf( "class=\"pagerCurrent\"" );
-            int theNextPageIndex = theSourceCode.LastIndexOf( "class=\"pagerNotCurrent\"" );
-
-            if( theCurrentPageIndex != -1 && theNextPageIndex > theCurrentPageIndex )
-            {
-                int theNextPageNumber = Convert.ToInt32( thePageNumber ) + 1;
-                Uri theNextPage = new Uri( "http://www.youtube.com/view_play_list?p=" + thePlaylistId +
-                                           "&page=" + theNextPageNumber );
-                DownloadYouTubePlaylist( ref theNextPage, theNextPageNumber );
-                return;
-            }
-            else
-            {
-                StartDownload();
-            }
-        }
-
-        private void DownloadYouTubeVideo( ref Uri aUrl )
-        {
-            mUI.StatusMessage = "Connecting to " + aUrl.Host;
-
-            String theError;
-
-            Sites.YouTube.TryParse( ref aUrl, ref mDownloadQueue, out theError );
-
-            if( !String.IsNullOrEmpty( theError ) )
-            {
-                mUI.StatusMessage = theError;
-                mUI.InputEnabled = true;
-                return;
-            }
-
-            StartDownload();
         }
 
         private void DownloadThumbnail( Uri aUrl )

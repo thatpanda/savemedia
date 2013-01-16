@@ -1,15 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 using Utility;
 
 namespace SaveMedia.Sites
 {
-    static class YouTube
+    class YouTube : ISite
     {
-        public static void TryParse( ref Uri aUrl,
-                                     ref List<DownloadTag> aDownloadQueue,
-                                     out String aError )
+        public bool Support( ref Uri aUrl )
+        {
+            return aUrl.Host.EndsWith( ".youtube.com" );
+        }
+
+        public void TryParse( ref Uri aUrl,
+                              ref List<DownloadTag> aDownloadQueue,
+                              ref IMainForm aUI,
+                              out String aError )
+        {
+            aError = String.Empty;
+
+            Uri theRequestUrl = aUrl;
+            bool isPlaylist;
+
+            ParseUrl( ref aUrl, out theRequestUrl, out isPlaylist );
+
+            if( isPlaylist )
+            {
+                ParseYouTubePlaylist( ref theRequestUrl, ref aDownloadQueue, ref aUI, out aError );
+            }
+            else
+            {
+                ParseYouTubeVideo( ref theRequestUrl, ref aDownloadQueue, out aError );
+            }
+        }
+
+        private void ParseYouTubeVideo( ref Uri aUrl,
+                                        ref List<DownloadTag> aDownloadQueue,
+                                        out String aError )
         {
             aError = String.Empty;
 
@@ -153,7 +181,81 @@ namespace SaveMedia.Sites
             aDownloadQueue.Add( theTag );
         }
 
-        public static String AvailableQuality( String aFmtMap, String aPreferedQuality )
+        private void ParseUrl( ref Uri aUrl, out Uri aRequestUrl, out bool aIsPlaylist )
+        {
+            String theUrlString = aUrl.OriginalString;
+
+            //theUrlString = theUrlString.Replace( "https://", "http://" );
+            theUrlString = theUrlString.Replace( "http://www.youtube.com/v/", "http://www.youtube.com/watch?v=" );
+            theUrlString = theUrlString.Replace( "http://www.youtube.com/view_play_list?p=", "http://www.youtube.com/playlist?list=" );
+
+            aRequestUrl = new Uri( theUrlString );
+            aIsPlaylist = aRequestUrl.OriginalString.StartsWith( "http://www.youtube.com/playlist?list=" );
+        }
+
+        private void ParseYouTubePlaylist( ref Uri aUrl,
+                                           ref List<DownloadTag> aDownloadQueue,
+                                           ref IMainForm aUI,
+                                           out String aError )
+        {
+            aError = String.Empty;
+
+            System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( aUrl.Query );
+            String thePlaylistId = theQueryStrings[ "list" ];
+
+            String theSourceCode;
+            if( !NetUtils.DownloadString( aUrl, out theSourceCode ) )
+            {
+                aError = "Failed to connect to " + aUrl.Host;
+                return;
+            }
+
+            String thePlaylistTitle;
+            if( !StringUtils.StringBetween( theSourceCode, "<meta property=\"og:title\" content=\"", "\"", out thePlaylistTitle ) &&
+                !StringUtils.StringBetween( theSourceCode, "<h1 title=\"", "\"", out thePlaylistTitle ) &&
+                !StringUtils.StringBetween( theSourceCode, "<h1>", "</h1>", out thePlaylistTitle ) )
+            {
+                aError = "Failed to read playlist's title";
+                return;
+            }
+
+            // .NET 4.0 or above can use System.Net.WebUtility.HtmlDecode
+            thePlaylistTitle = System.Web.HttpUtility.HtmlDecode( thePlaylistTitle );
+
+            // Regular Expression Language - Quick Reference
+            // http://msdn.microsoft.com/en-us/library/az24scfc.aspx
+            String theUrlPattern = "<li\\s+class=\"playlist-video-item.+?<a\\shref=\"([^\"]+)";
+            Match theUrlMatch = Regex.Match( theSourceCode, theUrlPattern, RegexOptions.Singleline );
+            if( !theUrlMatch.Success )
+            {
+                aError = "Failed to read playlist";
+                return;
+            }
+
+            String thePromptDescription = thePlaylistTitle + "\n\nWhere would you like to save the videos?";
+            String thePlaylistDestination;
+            if( !aUI.PromptForFolderDestination( ref thePromptDescription, out thePlaylistDestination ) )
+            {
+                aError = "Download cancelled";
+                return;
+            }
+
+            while( String.IsNullOrEmpty( aError ) &&
+                   theUrlMatch.Success )
+            {
+                String thePartialUrl = theUrlMatch.Groups[ 1 ].ToString();
+                Uri theVideoUrl = new Uri( "http://" + aUrl.Host + thePartialUrl );
+
+                ParseYouTubeVideo( ref theVideoUrl, ref aDownloadQueue, out aError );
+
+                DownloadTag theTag = aDownloadQueue[ aDownloadQueue.Count - 1 ];
+                theTag.DownloadDestination = thePlaylistDestination + "\\" + FileUtils.FilenameCheck( theTag.FileName ) + ".flv";
+
+                theUrlMatch = theUrlMatch.NextMatch();
+            }
+        }
+
+        private static String AvailableQuality( String aFmtMap, String aPreferedQuality )
         {
             if( String.IsNullOrEmpty( aFmtMap ) ||
                 String.IsNullOrEmpty( aPreferedQuality ) )

@@ -6,13 +6,22 @@ using Utility;
 
 namespace SaveMedia.Sites
 {
-    static class Tudou
+    class Tudou : ISite
     {
-        public static void TryParse( ref Uri aUrl,
-                                     ref List<DownloadTag> aDownloadQueue,
-                                     out String aError )
+        public bool Support( ref Uri aUrl )
+        {
+            return aUrl.OriginalString.StartsWith( "http://www.tudou.com" );
+        }
+
+        public void TryParse( ref Uri aUrl,
+                              ref List<DownloadTag> aDownloadQueue,
+                              ref IMainForm aUI,
+                              out String aError )
         {
             aError = String.Empty;
+
+            aError = "Sorry, this site is no longer supported";
+            return;
 
             String theVideoId = String.Empty;
 

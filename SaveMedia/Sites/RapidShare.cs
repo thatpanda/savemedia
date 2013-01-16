@@ -1,49 +1,63 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 
 using Utility;
 
 namespace SaveMedia.Sites
 {
-    static class RapidShare
+    class RapidShare : ISite
     {
-        public static void TryParse( ref Uri            aUrl,
-                                     out DownloadTag    aTag )
+        public bool Support( ref Uri aUrl )
         {
-            aTag = new DownloadTag();
+            return aUrl.Host.EndsWith( ".rapidshare.com" );
+        }
+
+        public void TryParse( ref Uri aUrl,
+                              ref List<DownloadTag> aDownloadQueue,
+                              ref IMainForm aUI,
+                              out String aError )
+        {
+            aError = String.Empty;
+
+            //DownloadRapidShareFile( ref aUrl );
+            aError = "Sorry, this site is not supported";
+            return;
+
+            DownloadTag theTag = new DownloadTag();
 
 
-            //aTag.VideoTitle = theVideoTitle;
-            //aTag.VideoUrl = new Uri( "http://www.youtube.com/get_video?" +
+            //theTag.VideoTitle = theVideoTitle;
+            //theTag.VideoUrl = new Uri( "http://www.youtube.com/get_video?" +
             //                           "video_id=" + theVideoId );
-            //aTag.ThumbnailUrl = new Uri( "http://img.youtube.com/vi/" + theVideoId + "/default.jpg" );
-            //aTag.FileName = aTag.VideoTitle;
-            //aTag.FileExtension = "Flash Video (*.flv)|*.flv";
+            //theTag.ThumbnailUrl = new Uri( "http://img.youtube.com/vi/" + theVideoId + "/default.jpg" );
+            //theTag.FileName = theTag.VideoTitle;
+            //theTag.FileExtension = "Flash Video (*.flv)|*.flv";
 
             if( aUrl.Host.StartsWith( "www" ) )
             {
                 String theSource;
                 if( !NetUtils.DownloadString( aUrl, out theSource ) )
                 {
-                    aTag.Error = "Failed to connect to " + aUrl.Host;
+                    theTag.Error = "Failed to connect to " + aUrl.Host;
                     return;
                 }
 
                 String theNextUrlStr;
                 if( !StringUtils.StringBetween( theSource, "<form id=\"ff\" action=\"", "\"", out theNextUrlStr ) )
                 {
-                    aTag.Error = "Failed to analyze source code";
+                    theTag.Error = "Failed to analyze source code";
                     return;
                 }
 
                 Uri theNextUrl;
                 if( Uri.TryCreate( theNextUrlStr, UriKind.Absolute, out theNextUrl ) )
                 {
-                    TryParse( ref theNextUrl, out aTag );
+                    TryParse( ref theNextUrl, ref aDownloadQueue, ref aUI, out aError );
                 }
                 else
                 {
-                    aTag.Error = "Unknown URL";
+                    theTag.Error = "Unknown URL";
                 }
 
                 return;
@@ -76,7 +90,7 @@ namespace SaveMedia.Sites
             //String theFirstMirror;
             //if( !StringUtils.StringBetween( theSourceCode, "<form name=\"dlf\" action=\"", "\"", out theFirstMirror ) )
             //{
-            //    aTag.Error = "Failed to extract mirror's URL";
+            //    theTag.Error = "Failed to extract mirror's URL";
             //    return;
             //}
 
@@ -84,7 +98,7 @@ namespace SaveMedia.Sites
             //bool isValid = Uri.TryCreate( theFirstMirror, UriKind.Absolute, out theDownloadUrl );
             //if( !isValid )
             //{
-            //    aTag.Error = "Unknown URL";
+            //    theTag.Error = "Unknown URL";
             //    return;
             //}
 
@@ -93,14 +107,35 @@ namespace SaveMedia.Sites
             //if( !StringUtils.StringBetween( theSourceCode, "var c=", ";", out theWaitingTimeStr ) ||
             //    !int.TryParse( theWaitingTimeStr, out theWaitingTime ) )
             //{
-            //    aTag.Error = "Failed to extract waiting time";
+            //    theTag.Error = "Failed to extract waiting time";
             //    return;
             //}
 
-            //aTag.VideoUrl = theDownloadUrl;
-            //aTag.WaitingTime = theWaitingTime;
-            //aTag.FileName = System.IO.Path.GetFileName( theDownloadUrl.OriginalString );
-            //aTag.FileExtension = System.IO.Path.GetExtension( theDownloadUrl.OriginalString );
+            //theTag.VideoUrl = theDownloadUrl;
+            //theTag.WaitingTime = theWaitingTime;
+            //theTag.FileName = System.IO.Path.GetFileName( theDownloadUrl.OriginalString );
+            //theTag.FileExtension = System.IO.Path.GetExtension( theDownloadUrl.OriginalString );
+        }
+
+        private void DownloadRapidShareFile( ref Uri aUrl )
+        {
+            //mWaitingTime = theTag.WaitingTime;
+            //mDelayTimer.Start();
+
+            //theTag.DownloadDestination = FileUtils.SaveFile( theTag.FileName, theTag.FileExtension + "|*" + theTag.FileExtension, mUI.Win32Window );
+
+            //if( String.IsNullOrEmpty( theTag.DownloadDestination ) )
+            //{
+            //    mUI.ChangeLayout( "Cancel clicked" );
+            //    mDelayTimer.Stop();
+            //    ClearTemporaryFiles();
+            //    return;
+            //}
+
+            //mDownloadQueue.Add( theTag );
+
+            //mDownloadButton.Visible = false;
+            //mCancelButton.Visible = true;
         }
     }
 }

@@ -13,6 +13,10 @@ namespace SaveMedia
             mDownloadDestination = String.Empty;
         }
 
+        // ==================================
+        // Properties
+        // ==================================
+
         public String VideoTitle
         {
             get { return mVideoTitle; }
@@ -66,6 +70,10 @@ namespace SaveMedia
             get { return mError; }
             set { mError = value; }
         }
+
+        // ==================================
+        // Members
+        // ==================================
 
         private String  mVideoTitle;
         private Uri     mVideoUrl;
