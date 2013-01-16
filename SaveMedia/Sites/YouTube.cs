@@ -98,77 +98,41 @@ namespace SaveMedia.Sites
             String theAvailableFmt = AvailableQuality( theFmtMap, thePreferedQuality );
 
             String theFmtStreamMap;
-            if( !StringUtils.StringBetween( theSourceCode, "\\u0026amp;url_encoded_fmt_stream_map=", "\\u0026amp;", out theFmtStreamMap ) && 
-                !StringUtils.StringBetween( theSourceCode, "&amp;url_encoded_fmt_stream_map=", "&amp;", out theFmtStreamMap ) &&
-                !StringUtils.StringBetween( theSourceCode, "&fmt_stream_map=", "&", out theFmtStreamMap ) &&
-                !StringUtils.StringBetween( theSourceCode, "&amp;fmt_stream_map=", "&amp;", out theFmtStreamMap ) )
+            if( !StringUtils.StringBetween( theSourceCode, "\\u0026amp;url_encoded_fmt_stream_map=", "\\u0026amp;", out theFmtStreamMap ) )
             {
                 aError = "Failed to extract video's fmt stream map";
                 return;
             }
-            theFmtStreamMap = System.Web.HttpUtility.UrlDecode( theFmtStreamMap );
-            if( theFmtStreamMap.ToLower().Contains( "%2f" ) )
-            {
-                theFmtStreamMap = Uri.UnescapeDataString( theFmtStreamMap );
-            }
-            theFmtStreamMap = "," + theFmtStreamMap;
 
             String[] theSplitStr = new String[1];
-            theSplitStr[ 0 ] = "&url=";
-            String[] theUrls = theFmtStreamMap.Split( theSplitStr, StringSplitOptions.RemoveEmptyEntries );
-            if( theUrls.Length == 0 )
+            theSplitStr[ 0 ] = "%2C";
+            String[] theFmtItems = theFmtStreamMap.Split( theSplitStr, StringSplitOptions.RemoveEmptyEntries );
+            if( theFmtItems.Length == 0 )
             {
-                aError = "Failed to split video's URLs";
+                aError = "Failed to read video's fmt stream map";
                 return;
             }
 
-            // TODO: check for valid URL
-            String theUrl = theUrls[0];
-
-            // debug only
-            //System.Windows.Forms.MessageBox.Show(
-            //    theUrl + "\n\n" +
-            //    System.Web.HttpUtility.UrlDecode( theUrl ) + "\n\n" +
-            //    Uri.UnescapeDataString( theUrl ) );
-
-            if( !System.String.IsNullOrEmpty( theAvailableFmt ) )
+            String theUrl = String.Empty;
+            foreach( String theEncodedItem in theFmtItems )
             {
-                //System.Windows.Forms.MessageBox.Show( theAvailableFmt );
-                foreach( System.String theLink in theUrls )
+                // Don't use .NET System.Uri.UnescapeDataString in URL Decoding
+                // http://blogs.msdn.com/b/yangxind/archive/2006/11/09/don-t-use-net-system-uri-unescapedatastring-in-url-decoding.aspx
+                String theFmtItem = System.Web.HttpUtility.UrlDecode( theEncodedItem );
+
+                System.Collections.Specialized.NameValueCollection theCollection = System.Web.HttpUtility.ParseQueryString( theFmtItem );
+                if( theCollection[ "itag" ] == theAvailableFmt || System.String.IsNullOrEmpty( theAvailableFmt ) )
                 {
-                    if( theLink.Contains( "&itag=" + theAvailableFmt + "&" ) ||
-                        theLink.EndsWith( "&itag=" + theAvailableFmt ) )
-                    {
-                        int theFallbackHostIndex = theLink.IndexOf( "&fallback_host=" );
-                        if( theFallbackHostIndex != -1 )
-                        {
-                            theUrl = theLink.Substring( 0, theFallbackHostIndex );
-                        }
-                        else
-                        {
-                            theUrl = theLink;
-                        }
-                        //System.Windows.Forms.MessageBox.Show( theLink );
-                        //System.Windows.Forms.Clipboard.SetText( theLink );
-                        break;
-                    }
+                    theUrl = theCollection[ "url" ] + "&signature=" + theCollection[ "sig" ];
+                    break;
                 }
             }
 
-            String theVideoSignature;
-            if( !StringUtils.StringBetween( theSourceCode, "signature=", "\\u0026", out theVideoSignature ) )
+            if( System.String.IsNullOrEmpty( theUrl ) )
             {
-                aError = "Failed to extract video's signature";
+                aError = "Failed to get video's URL";
                 return;
             }
-            theUrl += "&signature=" + theVideoSignature;
-
-            //System.Collections.Specialized.NameValueCollection theQueryStrings = System.Web.HttpUtility.ParseQueryString( theFullScreenUrl.Query );
-
-            //String theVideoTitle = theQueryStrings[ "title" ];
-            //String theVideoId    = theQueryStrings[ "video_id" ];
-            //String theToken      = theQueryStrings[ "t" ];
-            //String theFmtMap     = theQueryStrings[ "fmt_map" ];
 
             DownloadTag theTag = new DownloadTag();
             theTag.VideoTitle = theVideoTitle;
