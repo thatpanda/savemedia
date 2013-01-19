@@ -22,7 +22,7 @@ namespace SaveMedia
         // Functions
         // ==================================
 
-        void Initialize( params ConverterTag[] aConverters );
+        void Initialize( Controller aController, params ConverterTag[] aConverters );
 
         void ChangeLayout( String aPhase );
 

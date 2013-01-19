@@ -23,7 +23,12 @@ namespace SaveMedia
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+
+            MainForm theMainForm = new MainForm();
+            Controller theController = new Controller();
+            theController.Initialize( theMainForm );
+
+            Application.Run( theMainForm );
         }
     }
 }

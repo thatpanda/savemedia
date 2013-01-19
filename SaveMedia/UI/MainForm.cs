@@ -29,10 +29,7 @@ namespace SaveMedia
 
             mDefaultTitle = SaveMedia.Program.Title + " " + SaveMedia.Program.TitleVersion;
             this.Text = mDefaultTitle;
-            
             this.StatusMessage = String.Empty;
-
-            mController = new Controller( this );
         }
 
         // ==================================
@@ -108,8 +105,10 @@ namespace SaveMedia
         // IMainForm Functions
         // ==================================
 
-        public void Initialize( params ConverterTag[] aConverters )
+        public void Initialize( Controller aController, params ConverterTag[] aConverters )
         {
+            mController = aController;
+
             mConversionComboBox.Initialize( aConverters );
         }
 

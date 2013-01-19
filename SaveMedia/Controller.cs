@@ -45,30 +45,8 @@ namespace SaveMedia
         private System.Collections.Generic.List< DownloadTag > mDownloadQueue;
         private System.Collections.Generic.List< String > mConvertQueue;
 
-        public Controller( IMainForm aUI )
+        public Controller()
         {
-            mUI = aUI;
-
-            if( this.ConverterExists )
-            {
-                // TODO: configurable conversions
-                mUI.Initialize( new ConverterTag( "Do not convert file",
-                                                  String.Empty,
-                                                  String.Empty ),
-                                new ConverterTag( "MPEG-1 Audio Layer 3 (*.mp3)",
-                                                  ".mp3",
-                                                  "-y -i \"{0}\" -ar 44100 -ab 192k -ac 2 \"{1}\"" ),
-                                new ConverterTag( "Windows Media Video (*.wmv)",
-                                                  ".wmv",
-                                                  "-y -i \"{0}\" -vcodec wmv2 -sameq -acodec mp2 -ar 44100 -ab 192k -f avi \"{1}\"" ) );
-            }
-            else
-            {
-                mUI.Initialize( new ConverterTag( "Plug-in not found",
-                                                  String.Empty,
-                                                  String.Empty ) );
-            }
-
             mWebClient = new System.Net.WebClient();
             //mWebClient.CachePolicy = new System.Net.Cache.RequestCachePolicy( System.Net.Cache.RequestCacheLevel.Revalidate );
             mWebClient.Encoding = System.Text.Encoding.UTF8;
@@ -92,6 +70,33 @@ namespace SaveMedia
 
             mDownloadQueue = new List< DownloadTag >();
             mConvertQueue = new List< String >();
+        }
+
+        public void Initialize( IMainForm aUI )
+        {
+            mUI = aUI;
+
+            if( this.ConverterExists )
+            {
+                // TODO: configurable conversions
+                mUI.Initialize( this,
+                                new ConverterTag( "Do not convert file",
+                                                  String.Empty,
+                                                  String.Empty ),
+                                new ConverterTag( "MPEG-1 Audio Layer 3 (*.mp3)",
+                                                  ".mp3",
+                                                  "-y -i \"{0}\" -ar 44100 -ab 192k -ac 2 \"{1}\"" ),
+                                new ConverterTag( "Windows Media Video (*.wmv)",
+                                                  ".wmv",
+                                                  "-y -i \"{0}\" -vcodec wmv2 -sameq -acodec mp2 -ar 44100 -ab 192k -f avi \"{1}\"" ) );
+            }
+            else
+            {
+                mUI.Initialize( this,
+                                new ConverterTag( "Plug-in not found",
+                                                  String.Empty,
+                                                  String.Empty ) );
+            }
 
             UpdateUtils.StartupCheckIfNeeded( mUI );
         }
