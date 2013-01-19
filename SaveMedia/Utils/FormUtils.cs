@@ -39,7 +39,12 @@ namespace Utility
             [DllImport( "user32.dll" )]
             [return: MarshalAs( UnmanagedType.Bool )]
             internal static extern bool FlashWindowEx( ref FlashInfo pwfi );
+
+            [DllImport( "user32.dll", CharSet = CharSet.Auto )]
+            internal static extern Int32 SendMessage( IntPtr hWnd, int msg, int wParam, [MarshalAs( UnmanagedType.LPWStr )] String lParam );
         }
+
+        private const int EM_SETCUEBANNER = 0x1501;
 
         // Stop flashing. The system restores the window to its original state.
         public const uint StopFlashing = 0;
@@ -122,6 +127,11 @@ namespace Utility
         private static bool IsWin2kOrLater
         {
             get { return System.Environment.OSVersion.Version.Major >= 5; }
+        }
+
+        public static void SetCueText( System.Windows.Forms.TextBox aControl, String aText )
+        {
+            UnsafeNativeMethods.SendMessage( aControl.Handle, EM_SETCUEBANNER, 0, aText );
         }
     } 
 }
