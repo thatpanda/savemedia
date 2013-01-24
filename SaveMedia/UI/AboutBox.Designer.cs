@@ -38,6 +38,7 @@
             this.mCopyright = new System.Windows.Forms.LinkLabel();
             this.theLogo = new System.Windows.Forms.PictureBox();
             this.mTitle = new System.Windows.Forms.LinkLabel();
+            this.mDonate = new System.Windows.Forms.PictureBox();
             this.mToolTip = new System.Windows.Forms.ToolTip(this.components);
             theFFmpegLink = new System.Windows.Forms.LinkLabel();
             theMainLayout = new System.Windows.Forms.TableLayoutPanel();
@@ -47,13 +48,14 @@
             theBottomLayout.SuspendLayout();
             theTopLayout.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.theLogo)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.mDonate)).BeginInit();
             this.SuspendLayout();
             // 
             // theFFmpegLink
             // 
             theFFmpegLink.AutoSize = true;
             theFFmpegLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            theFFmpegLink.LinkColor = System.Drawing.SystemColors.ControlText;
+            theFFmpegLink.LinkColor = System.Drawing.SystemColors.ControlDarkDark;
             theFFmpegLink.Location = new System.Drawing.Point(3, 15);
             theFFmpegLink.Name = "theFFmpegLink";
             theFFmpegLink.Padding = new System.Windows.Forms.Padding(0, 3, 0, 0);
@@ -62,7 +64,7 @@
             theFFmpegLink.TabStop = true;
             theFFmpegLink.Text = "FFmpeg 32-bit (2013-01-15)";
             this.mToolTip.SetToolTip(theFFmpegLink, "http://ffmpeg.zeranoe.com/builds/");
-            theFFmpegLink.VisitedLinkColor = System.Drawing.SystemColors.ControlText;
+            theFFmpegLink.VisitedLinkColor = System.Drawing.SystemColors.ControlDarkDark;
             theFFmpegLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.theFFmpegLink_LinkClicked);
             // 
             // theMainLayout
@@ -73,16 +75,18 @@
             theMainLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             theMainLayout.Controls.Add(theBottomLayout, 0, 2);
             theMainLayout.Controls.Add(theTopLayout, 0, 0);
+            theMainLayout.Controls.Add(this.mDonate, 0, 4);
             theMainLayout.Location = new System.Drawing.Point(0, 0);
             theMainLayout.Margin = new System.Windows.Forms.Padding(0);
             theMainLayout.Name = "theMainLayout";
-            theMainLayout.Padding = new System.Windows.Forms.Padding(32, 12, 32, 32);
-            theMainLayout.RowCount = 3;
+            theMainLayout.Padding = new System.Windows.Forms.Padding(32, 12, 32, 22);
+            theMainLayout.RowCount = 5;
             theMainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
             theMainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 9F));
             theMainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
             theMainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            theMainLayout.Size = new System.Drawing.Size(223, 146);
+            theMainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            theMainLayout.Size = new System.Drawing.Size(223, 188);
             theMainLayout.TabIndex = 0;
             // 
             // theBottomLayout
@@ -106,6 +110,7 @@
             // mDate
             // 
             this.mDate.AutoSize = true;
+            this.mDate.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
             this.mDate.Location = new System.Drawing.Point(3, 0);
             this.mDate.Name = "mDate";
             this.mDate.Size = new System.Drawing.Size(42, 15);
@@ -136,7 +141,7 @@
             // 
             this.mCopyright.AutoSize = true;
             this.mCopyright.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            this.mCopyright.LinkColor = System.Drawing.SystemColors.ControlText;
+            this.mCopyright.LinkColor = System.Drawing.SystemColors.ControlDarkDark;
             this.mCopyright.Location = new System.Drawing.Point(63, 27);
             this.mCopyright.Name = "mCopyright";
             this.mCopyright.Padding = new System.Windows.Forms.Padding(0, 3, 0, 0);
@@ -145,7 +150,7 @@
             this.mCopyright.TabStop = true;
             this.mCopyright.Text = "mCopyright";
             this.mToolTip.SetToolTip(this.mCopyright, "savemedia@notfaqs.com");
-            this.mCopyright.VisitedLinkColor = System.Drawing.SystemColors.ControlText;
+            this.mCopyright.VisitedLinkColor = System.Drawing.SystemColors.ControlDarkDark;
             this.mCopyright.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.mCopyright_LinkClicked);
             // 
             // theLogo
@@ -178,6 +183,20 @@
             this.mTitle.VisitedLinkColor = System.Drawing.SystemColors.ControlText;
             this.mTitle.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.mTitle_LinkClicked);
             // 
+            // mDonate
+            // 
+            this.mDonate.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.mDonate.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.mDonate.Image = global::SaveMedia.Properties.Resources.btn_donate_LG;
+            this.mDonate.Location = new System.Drawing.Point(65, 137);
+            this.mDonate.Name = "mDonate";
+            this.mDonate.Size = new System.Drawing.Size(92, 26);
+            this.mDonate.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.mDonate.TabIndex = 2;
+            this.mDonate.TabStop = false;
+            this.mToolTip.SetToolTip(this.mDonate, ";)");
+            this.mDonate.Click += new System.EventHandler(this.mDonate_Click);
+            // 
             // AboutBox
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -185,7 +204,7 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.SystemColors.Window;
-            this.ClientSize = new System.Drawing.Size(207, 146);
+            this.ClientSize = new System.Drawing.Size(223, 188);
             this.Controls.Add(theMainLayout);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -203,6 +222,7 @@
             theTopLayout.ResumeLayout(false);
             theTopLayout.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.theLogo)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.mDonate)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -215,5 +235,6 @@
         private System.Windows.Forms.ToolTip mToolTip;
         private System.Windows.Forms.LinkLabel mCopyright;
         private System.Windows.Forms.LinkLabel mTitle;
+        private System.Windows.Forms.PictureBox mDonate;
     }
 }

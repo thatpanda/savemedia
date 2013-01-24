@@ -187,6 +187,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\btn_donate_LG.gif" />
     <Content Include="Resources\SaveMedia.ico" />
     <Content Include="Resources\SaveMedia.png" />
     <None Include="Resources\Youtube48x48.png" />
