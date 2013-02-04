@@ -32,7 +32,15 @@ namespace SaveMedia
 
         private void mCopyright_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
         {
-            System.Diagnostics.Process.Start( "mailto:savemedia@notfaqs.com" );
+            try
+            {
+                System.Diagnostics.Process.Start( "mailto:savemedia@notfaqs.com" );
+            }
+            catch
+            {
+                Clipboard.SetText( "savemedia@notfaqs.com" );
+                MessageBox.Show( this, "savemedia@notfaqs.com has been copied to your clipboard", "Email", MessageBoxButtons.OK, MessageBoxIcon.Information );
+            }
         }
 
         private void theFFmpegLink_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
