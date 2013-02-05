@@ -125,7 +125,8 @@ namespace SaveMedia
                 }
                 else
                 {
-                    mUI.ChangeLayout( "Download failed" );
+                    mUI.ShowError( "Download failed" );
+                    mUI.ChangeLayout( Phase_t.eInitialized );
                 }
             }
             else
@@ -140,12 +141,12 @@ namespace SaveMedia
             {
                 mWaitingTime = 0;
                 mDelayTimer.Stop();
-                mUI.ChangeLayout( "Download cancelled" );
+                mUI.ChangeLayout( Phase_t.eInitialized );
             }
             else if( mPlugin != null )
             {
                 mPlugin.Kill();
-                mUI.ChangeLayout( "Conversion cancelled" );
+                mUI.ChangeLayout( Phase_t.eInitialized );
             }
             else
             {
@@ -156,12 +157,19 @@ namespace SaveMedia
 
         public void ParseUrl( String aUrl )
         {
+            if( String.IsNullOrEmpty( aUrl.Trim() ) )
+            {
+                return;
+            }
+
+            mUI.InputEnabled = false;
+
             Uri theUrl;
             bool isValid = Uri.TryCreate( aUrl, UriKind.Absolute, out theUrl );
 
             if( !isValid )
             {
-                mUI.StatusMessage = "Unsupported URL";
+                mUI.ShowError( "Invalid URL" );
                 mUI.InputEnabled = true;
                 return;
             }
@@ -215,7 +223,7 @@ namespace SaveMedia
             }
             else
             {
-                mUI.InputEnabled = true;
+                mUI.ChangeLayout( Phase_t.eInitialized );
             }
         }
 
@@ -256,11 +264,12 @@ namespace SaveMedia
             }
             else if( isSuccess )
             {
-                mUI.ChangeLayout( "Conversion completed" );
+                mUI.ChangeLayout( Phase_t.eConvertCompleted );
             }
             else
             {
-                mUI.ChangeLayout( "Conversion failed" );
+                mUI.ShowError( "Conversion failed" );
+                mUI.ChangeLayout( Phase_t.eInitialized );
             }
         }
         
@@ -338,20 +347,19 @@ namespace SaveMedia
         {
             if( String.IsNullOrEmpty( aDestination ) )
             {
-                mUI.ChangeLayout( "Cancel clicked" );
+                mUI.ChangeLayout( Phase_t.eInitialized );
                 ClearTemporaryFiles();
                 return;
             }
 
             mFileSize = 0;
-            mFileSizeString = "??? MB";
 
             mDownloadDestination = aDestination;
 
             mWebClient.Headers.Add( "user-agent", SaveMedia.Program.UserAgent );
             mWebClient.DownloadFileAsync( aUrl, mDownloadDestination );
 
-            mUI.DownloadStarted( aDestination );
+            mUI.ChangeLayout( Phase_t.eDownloadStarted );
         }
 
         private void DownloadProgressChanged( object sender, System.Net.DownloadProgressChangedEventArgs e )
@@ -385,12 +393,12 @@ namespace SaveMedia
         {
             if( e.Cancelled )
             {
-                mUI.ChangeLayout( "Download cancelled" );
+                mUI.ChangeLayout( Phase_t.eInitialized );
             }
             else if( e.Error != null )
             {
-                mUI.ChangeLayout( "Download failed" );
-                mUI.StatusMessage = e.Error.Message;
+                mUI.ShowError( e.Error.Message );
+                mUI.ChangeLayout( Phase_t.eInitialized );
             }
             else
             {
@@ -413,7 +421,7 @@ namespace SaveMedia
                 }
                 else
                 {
-                    mUI.ChangeLayout( "Download completed" );
+                    mUI.ChangeLayout( Phase_t.eDownloadCompleted );
                 }
             }
         }
@@ -428,7 +436,8 @@ namespace SaveMedia
 
             if( !this.ConverterExists )
             {
-                mUI.ChangeLayout( "Conversion failed, plug-in not found" );
+                mUI.ShowError( "Conversion failed, plug-in not found" );
+                mUI.ChangeLayout( Phase_t.eInitialized );
                 return;
             }
 
@@ -460,14 +469,14 @@ namespace SaveMedia
             mPlugin.BeginErrorReadLine();
             mPlugin.BeginOutputReadLine();
 
-            mUI.ConvertStarted();
+            mUI.ChangeLayout( Phase_t.eConvertStarted );
         }
 
         private void ThumbnailDownloadCompleted( object sender, System.ComponentModel.AsyncCompletedEventArgs e )
         {
             if( !e.Cancelled && e.Error == null )
             {
-                mUI.ThumbnailPath = mThumbnailPath;
+                mUI.ShowThumbnail( mThumbnailPath );
             }
         }
 

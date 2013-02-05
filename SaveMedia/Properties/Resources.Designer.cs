@@ -67,9 +67,37 @@ namespace SaveMedia.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap info {
+            get {
+                object obj = ResourceManager.GetObject("info", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap info_hover {
+            get {
+                object obj = ResourceManager.GetObject("info_hover", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap SaveMedia {
             get {
                 object obj = ResourceManager.GetObject("SaveMedia", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap settings {
+            get {
+                object obj = ResourceManager.GetObject("settings", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap settings_hover {
+            get {
+                object obj = ResourceManager.GetObject("settings_hover", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -18,14 +18,24 @@ namespace SaveMedia
         {
             InitializeComponent();
 
+            FormUtils.SetCueText( mUrl, "Video URL" );
+
             mConversionComboBox = new CustomComboBox();
+            mConversionComboBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            mConversionComboBox.Font = mConversion.Font;
             mConversionComboBox.Name = "mConversion";
             mConversionComboBox.Size = new System.Drawing.Size( 368, 21 );
             mConversionComboBox.TabIndex = 4;
             
             mInputLayout.Controls.Remove( mConversion );
             mConversion = mConversionComboBox;
-            mInputLayout.Controls.Add( mConversion, 0, 4 );
+            mInputLayout.Controls.Add( mConversion, 0, 2 );
+
+            // Manually calculate the height of the row as it does not recalculate properly (even it is set to AutoSize)
+            // Note: calling suspend/resume/perform layout does not help
+            // TODO: make CustomComboBox designerable should fix this
+            mInputLayout.RowStyles[ 2 ] = new System.Windows.Forms.RowStyle( System.Windows.Forms.SizeType.Absolute,
+                mConversionComboBox.Margin.Top + mConversionComboBox.Height + mConversionComboBox.Margin.Bottom );
 
             mDefaultTitle = SaveMedia.Program.Title + " " + SaveMedia.Program.TitleVersion;
             this.Text = mDefaultTitle;
@@ -70,12 +80,9 @@ namespace SaveMedia
                     {
                         mUrl.Text = ClipboardUtils.ReadUrl();
                     }
-                    mUrl_TextChanged( this, new EventArgs() );
                 }
-                else
-                {
-                    mDownloadButton.Enabled = false;
-                }
+                
+                mDownloadButton.Enabled = value;
             }
         }
 
@@ -85,16 +92,6 @@ namespace SaveMedia
         }
 
         public String StatusMessage { set { mStatus.Text = value; } }
-
-        public String ThumbnailPath
-        {
-            set
-            {
-                mThumbnail.ImageLocation = value;
-                mThumbnail.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-                mThumbnail.Refresh();
-            }
-        }
 
         public IWin32Window Win32Window
         {
@@ -109,10 +106,12 @@ namespace SaveMedia
         {
             mController = aController;
 
+            ChangeLayout( Phase_t.eInitialized );
+
             mConversionComboBox.Initialize( aConverters );
         }
 
-        public void ChangeLayout( String aPhase )
+        public void ChangeLayout( Phase_t aPhase )
         {
             if( this.InvokeRequired )
             {
@@ -125,108 +124,79 @@ namespace SaveMedia
 
             switch( aPhase )
             {
-                case "Cancel clicked":
-
+                case Phase_t.eInitialized:
                     this.Text = mDefaultTitle;
-                    mProgressBar.Value = mProgressBar.Maximum;
 
-                    this.StatusMessage = "Download cancelled";
-
-                    MediaInfoVisible( false );
-                    this.InputEnabled = true;
-                    break;
-
-                case "Conversion cancelled":
-                case "Conversion completed":
-                case "Conversion failed":
-                case "Conversion failed, plug-in not found":
-
-                    this.Text = mDefaultTitle;
-                    mProgressBar.Value = mProgressBar.Maximum;
-
-                    this.StatusMessage = aPhase;
-
-                    mDownloadButton.Visible = false;
-                    mOkButton.Visible = true;
+                    mInputLayout.Visible = true;
+                    mDownloadButton.Visible = true;
+                    mOkButton.Visible = false;
                     mCancelButton.Visible = false;
+                    this.InputEnabled = true;
 
-                    NotifyUser();
+                    mMediaInfoLayout.Visible = false;
+                    mProgressBar.Visible = false;
                     break;
 
-                case "Downloading":
+                case Phase_t.eParsingUrl:
+                    mInputLayout.Visible = false;
 
+                    mThumbnail.Visible = false;
+                    mTitleLabel.Text = "Loading...";
+                    mStatus.Text = String.Empty;
+                    mMediaInfoLayout.Visible = true;
+
+                    mProgressBar.Style = ProgressBarStyle.Marquee;
+                    mProgressBar.Visible = true;
+                    break;
+
+                case Phase_t.eDownloadStarted:
+                    this.DownloadProgress = 0;
+                    this.StatusMessage = "Downloading...";
+
+                    mProgressBar.Style = ProgressBarStyle.Blocks;
                     mDownloadButton.Visible = false;
                     mCancelButton.Visible = true;
                     break;
 
-                case "Download cancelled":
-
+                case Phase_t.eDownloadCompleted:
                     this.Text = mDefaultTitle;
                     mProgressBar.Value = mProgressBar.Maximum;
 
-                    this.StatusMessage = aPhase;
+                    this.StatusMessage = "Download Completed";
+
+                    mOkButton.Visible = true;
+                    mCancelButton.Visible = false;
+
+                    NotifyUser();
+                    break;
+
+                case Phase_t.eConvertStarted:
+                    this.ConversionProgress = 0;
+
+                    mProgressBar.Style = ProgressBarStyle.Blocks;
+                    mDownloadButton.Visible = false;
+                    mCancelButton.Visible = true;
+                    break;
+
+                case Phase_t.eConvertCompleted:
+                    this.Text = mDefaultTitle;
+                    mProgressBar.Value = mProgressBar.Maximum;
+
+                    this.StatusMessage = "Conversion completed";
 
                     mDownloadButton.Visible = false;
                     mOkButton.Visible = true;
                     mCancelButton.Visible = false;
 
                     NotifyUser();
-                    break;
-
-                case "Download completed":
-
-                    this.Text = mDefaultTitle;
-                    mProgressBar.Value = mProgressBar.Maximum;
-
-                    this.StatusMessage = aPhase;
-
-                    mOkButton.Visible = true;
-                    mCancelButton.Visible = false;
-
-                    NotifyUser();
-                    break;
-
-                case "Download failed":
-
-                    this.Text = mDefaultTitle;
-                    mProgressBar.Value = mProgressBar.Maximum;
-
-                    this.StatusMessage = aPhase;
-
-                    mDownloadButton.Visible = false;
-                    mOkButton.Visible = true;
-                    mCancelButton.Visible = false;
-
-                    NotifyUser();
-                    break;
-
-                case "OK clicked":
-
-                    this.InputEnabled = true;
-                    MediaInfoVisible( false );
-                    mProgressBar.Value = 0;
-                    this.StatusMessage = String.Empty;
-
-                    mDownloadButton.Visible = true;
-                    mOkButton.Visible = false;
-                    mCancelButton.Visible = false;
                     break;
 
                 default:
-
-                    throw new System.Exception( "Unknown phase" );
+                    break;
             }
 
             this.ResumeLayout( false );
             this.PerformLayout();
-        }
-
-        public void ConvertStarted()
-        {
-            this.ConversionProgress = 0;
-
-            mDownloadButton.Visible = false;
-            mCancelButton.Visible = true;
         }
 
         public void DisplayMediaInfo( DownloadTag aTag )
@@ -236,8 +206,8 @@ namespace SaveMedia
                 return;
             }
 
-            mTitleLabel.Text = "Title: " + aTag.VideoTitle.Replace( "\\", "" );
-            mSizeLabel.Text = "Size: ??? MB";
+            mTitleLabel.Text = aTag.VideoTitle;
+            mSizeLabel.Text = "??? MB";
 
             if( String.IsNullOrEmpty( aTag.Quality ) )
             {
@@ -250,37 +220,23 @@ namespace SaveMedia
 
             mLocationLabel.Text = String.Empty;
 
-            this.StatusMessage = "Ready to download";
-            MediaInfoVisible( true );
+            this.StatusMessage = String.Empty;
+
+            mMediaInfoLayout.Visible = true;
         }
 
-        public void DownloadStarted( String aDestination )
+        public String PromptForFolderDestination( String aDescription )
         {
-            this.DownloadProgress = 0;
-            this.Text = "0% - " + mDefaultTitle;
-            this.StatusMessage = "Downloading...";
-            //mLocationLabel.Text = "Location: " + aDestination;
-
-            mDownloadButton.Visible = false;
-            mCancelButton.Visible = true;
-        }
-
-        public void FileSize( String aValue )
-        {
-            mSizeLabel.Text = "Size: " + aValue;
-        }
-
-        public bool PromptForFolderDestination( ref String aDescription, out String aDestination )
-        {
-            aDestination = String.Empty;
-
             FolderBrowserDialog theDialog = new FolderBrowserDialog();
             theDialog.Description = aDescription;
 
             DialogResult theDialogResult = theDialog.ShowDialog( this.Win32Window );
-            aDestination = theDialog.SelectedPath;
+            if( theDialogResult == DialogResult.OK )
+            {
+                return theDialog.SelectedPath;
+            }
 
-            return theDialogResult == DialogResult.OK;
+            return null;
         }
 
         public DialogResult PromptForUpdate()
@@ -294,34 +250,32 @@ namespace SaveMedia
             return MessageBox.Show( this, "A newer version of SaveMedia is available.\n\nWould you like to download now?", "Updates", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1 );
         }
 
+        public void ShowError( String aErrorMessage )
+        {
+            NotifyUser();
+            MessageBox.Show( this, aErrorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error );
+            //mToolTip.Show( aErrorMessage, mUrl, 0, mUrl.Height );
+        }
+
+        public void ShowThumbnail( String aThumbnailPath )
+        {
+            mThumbnail.ImageLocation = aThumbnailPath;
+            //mThumbnail.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            //mThumbnail.Refresh();
+            mThumbnail.Visible = true;
+        }
+
         // ==================================
         // Delegates
         // ==================================
 
-        delegate void ChangeLayoutCallBack( String aPhase );
+        delegate void ChangeLayoutCallBack( Phase_t aPhase );
         delegate void NotifyUserCallBack();
         delegate DialogResult PromptForUpdateCallBack();
 
         // ==================================
         // Functions
         // ==================================
-
-        private void MediaInfoVisible( bool aIsVisible )
-        {
-            //int theMargin = 3;
-            //int theNewHeight = mUrlGroupBox.Height + theMargin +
-            //                   theMargin + mConversionGroupBox.Height;
-            //mMediaInfoGroupBox.MinimumSize = new Size( mMediaInfoGroupBox.Width, theNewHeight );
-
-            this.SuspendLayout();
-            mInputLayout.Visible = !aIsVisible;
-            mMediaInfoGroupBox.Visible = aIsVisible;
-            mThumbnail.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            mThumbnail.Image = mThumbnail.InitialImage;
-            mThumbnail.Refresh();
-            this.ResumeLayout( false );
-            this.PerformLayout();
-        }
 
         private void NotifyUser()
         {
@@ -344,7 +298,7 @@ namespace SaveMedia
 
         private void mOkButton_Click( object sender, EventArgs e )
         {
-            ChangeLayout( "OK clicked" );
+            ChangeLayout( Phase_t.eInitialized );
             mController.ClearTemporaryFiles();
         }
 
@@ -355,15 +309,13 @@ namespace SaveMedia
 
         private void mDownloadButton_Click( object sender, EventArgs e )
         {
-            this.InputEnabled = false;
-
             mController.ParseUrl( mUrl.Text );
         }
 
         private void mUrl_TextChanged( object sender, EventArgs e )
         {
-            Uri theUrl;
-            mDownloadButton.Enabled = Uri.TryCreate( mUrl.Text, UriKind.Absolute, out theUrl );
+            //Uri theUrl;
+            //mDownloadButton.Enabled = Uri.TryCreate( mUrl.Text, UriKind.Absolute, out theUrl );
 
             if( mDownloadButton.Enabled )
             {
@@ -378,21 +330,41 @@ namespace SaveMedia
             }
         }
 
-        private void MainForm_FormClosed( object sender, FormClosedEventArgs e )
+        private void mOptionsButton_Click( object sender, EventArgs e )
         {
-            mController.ClearTemporaryFiles();
+            System.Windows.Forms.Form theForm = new OptionsForm();
+            theForm.ShowDialog( this );
         }
 
-        private void mAboutToolStripMenuItem_Click( object sender, EventArgs e )
+        private void mOptionsButton_MouseEnter( object sender, EventArgs e )
+        {
+            mOptionsButton.Image = global::SaveMedia.Properties.Resources.settings_hover;
+        }
+
+        private void mOptionsButton_MouseLeave( object sender, EventArgs e )
+        {
+            mOptionsButton.Image = global::SaveMedia.Properties.Resources.settings;
+        }
+
+        private void mAboutButton_Click( object sender, EventArgs e )
         {
             System.Windows.Forms.Form theForm = new AboutBox();
             theForm.ShowDialog( this );
         }
 
-        private void mOptionsToolStripMenuItem_Click( object sender, EventArgs e )
+        private void mAboutButton_MouseEnter( object sender, EventArgs e )
         {
-            System.Windows.Forms.Form theForm = new OptionsForm();
-            theForm.ShowDialog( this );
+            mAboutButton.Image = global::SaveMedia.Properties.Resources.info_hover;
+        }
+
+        private void mAboutButton_MouseLeave( object sender, EventArgs e )
+        {
+            mAboutButton.Image = global::SaveMedia.Properties.Resources.info;
+        }
+
+        private void MainForm_FormClosed( object sender, FormClosedEventArgs e )
+        {
+            mController.ClearTemporaryFiles();
         }
 
         private void MainForm_Activated( object sender, EventArgs e )

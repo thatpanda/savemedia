@@ -3,6 +3,16 @@ using System.Windows.Forms;
 
 namespace SaveMedia
 {
+    public enum Phase_t
+    {
+        eInitialized,
+        eParsingUrl,
+        eDownloadStarted,
+        eDownloadCompleted,
+        eConvertStarted,
+        eConvertCompleted
+    };
+
     public interface IMainForm
     {
         // ==================================
@@ -14,7 +24,6 @@ namespace SaveMedia
         bool InputEnabled { set; }
         ConverterTag SelectedConverter { get; }
         String StatusMessage { set; }
-        String ThumbnailPath { set; }
 
         IWin32Window Win32Window{ get; }
 
@@ -24,18 +33,16 @@ namespace SaveMedia
 
         void Initialize( Controller aController, params ConverterTag[] aConverters );
 
-        void ChangeLayout( String aPhase );
-
-        void ConvertStarted();
+        void ChangeLayout( Phase_t aPhase );
 
         void DisplayMediaInfo( DownloadTag aTag );
 
-        void DownloadStarted( String aDestination );
-
-        void FileSize( String aValue );
-
-        bool PromptForFolderDestination( ref String aDescription, out String aDestination );
+        String PromptForFolderDestination( String aDescription );
 
         DialogResult PromptForUpdate();
+
+        void ShowError( String aErrorMessage );
+
+        void ShowThumbnail( String aThumbnailPath );
     }
 }

@@ -187,7 +187,11 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\settings_hover.png" />
+    <None Include="Resources\settings.png" />
     <None Include="Resources\btn_donate_LG.gif" />
+    <None Include="Resources\info.png" />
+    <None Include="Resources\info_hover.png" />
     <Content Include="Resources\SaveMedia.ico" />
     <Content Include="Resources\SaveMedia.png" />
     <None Include="Resources\Youtube48x48.png" />
