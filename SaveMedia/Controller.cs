@@ -441,6 +441,8 @@ namespace SaveMedia
                 return;
             }
 
+            mDuration = 0;
+
             mConversionTempInPath = System.IO.Path.GetTempFileName();
             mConversionTempOutPath = System.IO.Path.GetTempFileName();
 
