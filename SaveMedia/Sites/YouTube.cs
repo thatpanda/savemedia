@@ -41,6 +41,36 @@ namespace SaveMedia.Sites
         {
             aError = String.Empty;
 
+            System.Collections.Specialized.NameValueCollection theUrlQuery = System.Web.HttpUtility.ParseQueryString( aUrl.Query );
+            String theVideoId = theUrlQuery["v"];
+            if( String.IsNullOrEmpty( theVideoId ) )
+            {
+                aError = theVideoId;
+                return;
+            }
+
+            Uri theXmlUrl = new Uri( "http://www.youtube.com/get_video_info?&video_id=" + theVideoId );
+            String theVideoInfoXml;
+            if( !NetUtils.DownloadString( theXmlUrl, out theVideoInfoXml ) )
+            {
+                aError = "Failed to receive video's info";
+                return;
+            }
+
+            System.Collections.Specialized.NameValueCollection theVideoInfo = System.Web.HttpUtility.ParseQueryString( theVideoInfoXml );
+            if( String.IsNullOrEmpty( theVideoInfo[ "status" ] ) || theVideoInfo[ "status" ].Equals( "fail" ) )
+            {
+                aError = theVideoInfo[ "reason" ];
+                return;
+            }
+
+            String theVideoTitle = theVideoInfo[ "title" ];
+            if( String.IsNullOrEmpty( theVideoTitle ) )
+            {
+                aError = "Failed to extract video's title";
+                return;
+            }
+
             String theSourceCode;
             if( !NetUtils.DownloadString( aUrl, out theSourceCode ) )
             {
@@ -48,37 +78,8 @@ namespace SaveMedia.Sites
                 return;
             }
 
-            String theVideoTitle;
-            if( !StringUtils.StringBetween( theSourceCode, "<meta name=\"title\" content=\"", "\">", out theVideoTitle ) )
-            {
-                aError = "Failed to extract video's title";
-                return;
-            }
-
-            String theVideoId;
-            if( !StringUtils.StringBetween( theSourceCode, "'VIDEO_ID': \"", "\"", out theVideoId ) &&
-                !StringUtils.StringBetween( theSourceCode, "\"VIDEO_ID\": \"", "\"", out theVideoId ) &&
-                !StringUtils.StringBetween( theSourceCode, "\\u0026amp;video_id=", "\\u0026amp;", out theVideoId ) &&
-                !StringUtils.StringBetween( theSourceCode, "&video_id=", "&", out theVideoId ) &&
-                !StringUtils.StringBetween( theSourceCode, "&amp;video_id=", "&amp;", out theVideoId ) )
-            {
-                aError = "Failed to extract video's id";
-                return;
-            }
-
-            //Uri theXmlUrl = new Uri( "http://www.youtube.com/get_video_info?&video_id=" + theVideoId );
-            //if( !NetUtils.DownloadString( theXmlUrl, out theSourceCode ) )
-            //{
-            //    aError = "Failed to receive video's info";
-            //    return;
-            //}
-
-            String theToken;
-            if( !StringUtils.StringBetween( theSourceCode, "\"t\": \"", "\"", out theToken ) && 
-                !StringUtils.StringBetween( theSourceCode, "\\u0026amp;t=", "\\u0026amp;", out theToken ) &&
-                !StringUtils.StringBetween( theSourceCode, "\\u0026amp;t=", "\"", out theToken ) &&
-                !StringUtils.StringBetween( theSourceCode, "&t=", "&", out theToken ) &&
-                !StringUtils.StringBetween( theSourceCode, "&amp;t=", "&amp;", out theToken ) )
+            String theToken = theVideoInfo[ "token" ];
+            if( String.IsNullOrEmpty( theToken ) )
             {
                 aError = "Failed to extract token";
                 return;
@@ -98,14 +99,15 @@ namespace SaveMedia.Sites
             String theAvailableFmt = AvailableQuality( theFmtMap, thePreferedQuality );
 
             String theFmtStreamMap;
-            if( !StringUtils.StringBetween( theSourceCode, "\\u0026amp;url_encoded_fmt_stream_map=", "\\u0026amp;", out theFmtStreamMap ) )
+            theFmtStreamMap = theVideoInfo[ "url_encoded_fmt_stream_map" ];
+            if( String.IsNullOrEmpty( theFmtStreamMap ) )
             {
                 aError = "Failed to extract video's fmt stream map";
                 return;
             }
 
             String[] theSplitStr = new String[1];
-            theSplitStr[ 0 ] = "%2C";
+            theSplitStr[ 0 ] = ",";
             String[] theFmtItems = theFmtStreamMap.Split( theSplitStr, StringSplitOptions.RemoveEmptyEntries );
             if( theFmtItems.Length == 0 )
             {
@@ -114,13 +116,13 @@ namespace SaveMedia.Sites
             }
 
             String theUrl = String.Empty;
-            foreach( String theEncodedItem in theFmtItems )
+            foreach( String theItem in theFmtItems )
             {
                 // Don't use .NET System.Uri.UnescapeDataString in URL Decoding
                 // http://blogs.msdn.com/b/yangxind/archive/2006/11/09/don-t-use-net-system-uri-unescapedatastring-in-url-decoding.aspx
-                String theFmtItem = System.Web.HttpUtility.UrlDecode( theEncodedItem );
+                //String theFmtItem = System.Web.HttpUtility.UrlDecode( theEncodedItem );
 
-                System.Collections.Specialized.NameValueCollection theCollection = System.Web.HttpUtility.ParseQueryString( theFmtItem );
+                System.Collections.Specialized.NameValueCollection theCollection = System.Web.HttpUtility.ParseQueryString( theItem );
                 if( theCollection[ "itag" ] == theAvailableFmt || System.String.IsNullOrEmpty( theAvailableFmt ) )
                 {
                     theUrl = theCollection[ "url" ] + "&signature=" + theCollection[ "sig" ];
