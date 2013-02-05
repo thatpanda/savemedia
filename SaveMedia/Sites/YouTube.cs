@@ -197,10 +197,9 @@ namespace SaveMedia.Sites
             }
 
             String thePromptDescription = thePlaylistTitle + "\n\nWhere would you like to save the videos?";
-            String thePlaylistDestination;
-            if( !aUI.PromptForFolderDestination( ref thePromptDescription, out thePlaylistDestination ) )
+            String thePlaylistDestination = aUI.PromptForFolderDestination( thePromptDescription );
+            if( String.IsNullOrEmpty( thePlaylistDestination ) )
             {
-                aError = "Download cancelled";
                 return;
             }
 
