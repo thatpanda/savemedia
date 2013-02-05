@@ -50,6 +50,12 @@ namespace SaveMedia
         {
             set
             {
+                if( this.InvokeRequired )
+                {
+                    this.Invoke( new Action<int>( delegate( int aValue ) { this.ConversionProgress = aValue; } ), value );
+                    return;
+                }
+
                 this.Text = value.ToString() + "% - " + mDefaultTitle;
                 mProgressBar.Value = value;
 
@@ -227,6 +233,12 @@ namespace SaveMedia
 
         public String PromptForFolderDestination( String aDescription )
         {
+            if( this.InvokeRequired )
+            {
+                PromptForFolderDestinationCallBack theCallBack = new PromptForFolderDestinationCallBack( PromptForFolderDestination );
+                return (String) this.Invoke( theCallBack, new object[] { aDescription } );
+            }
+
             FolderBrowserDialog theDialog = new FolderBrowserDialog();
             theDialog.Description = aDescription;
 
@@ -272,6 +284,7 @@ namespace SaveMedia
         delegate void ChangeLayoutCallBack( Phase_t aPhase );
         delegate void NotifyUserCallBack();
         delegate DialogResult PromptForUpdateCallBack();
+        delegate String PromptForFolderDestinationCallBack( String aDescription );
 
         // ==================================
         // Functions

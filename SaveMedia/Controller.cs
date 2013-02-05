@@ -45,6 +45,26 @@ namespace SaveMedia
         private System.Collections.Generic.List< DownloadTag > mDownloadQueue;
         private System.Collections.Generic.List< String > mConvertQueue;
 
+        private BackgroundWorker mWorker;
+
+        private class WorkerArg
+        {
+            public WorkerArg()
+            {
+            }
+
+            public Uri Url;
+        }
+
+        private class WorkerResult
+        {
+            public WorkerResult()
+            {
+            }
+
+            public String Error;
+        }
+
         public Controller()
         {
             mWebClient = new System.Net.WebClient();
@@ -70,6 +90,10 @@ namespace SaveMedia
 
             mDownloadQueue = new List< DownloadTag >();
             mConvertQueue = new List< String >();
+
+            mWorker = new BackgroundWorker();
+            mWorker.DoWork += new DoWorkEventHandler( mWorker_DoWork );
+            mWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler( mWorker_RunWorkerCompleted );
         }
 
         public void Initialize( IMainForm aUI )
@@ -177,52 +201,76 @@ namespace SaveMedia
 			mDownloadQueue.Clear();
             mConvertQueue.Clear();
 
-            ParseUrl( ref theUrl );
+            if( !String.IsNullOrEmpty( theUrl.OriginalString ) &&
+                System.IO.File.Exists( theUrl.OriginalString ) )
+            {
+                if( mUI.SelectedConverter.IsValid )
+                {
+                    ConvertFile( theUrl.OriginalString, theUrl.OriginalString );
+                }
+                else
+                {
+                    mUI.InputEnabled = true;
+                }
+            }
+            else
+            {
+                WorkerArg theArg = new WorkerArg();
+                theArg.Url = theUrl;
+                mWorker.RunWorkerAsync( theArg );
+            }
         }
 
-        private void ParseUrl( ref Uri aUrl )
+        void mWorker_DoWork( object sender, DoWorkEventArgs e )
         {
+            WorkerResult theResult = new WorkerResult();
+            e.Result = theResult;
+
+            WorkerArg theArg = (WorkerArg) e.Argument;
+
+            mUI.ChangeLayout( Phase_t.eParsingUrl );
+
             foreach( Sites.ISite theSite in mSupportedSites )
             {
-                if( theSite.Support( ref aUrl ) )
+                if( theSite.Support( ref theArg.Url ) )
                 {
-                    mUI.StatusMessage = "Connecting to " + aUrl.Host;
-
-                    String theError;
-                    theSite.TryParse( ref aUrl, ref mDownloadQueue, ref mUI, out theError );
-
-                    if( String.IsNullOrEmpty( theError ) )
-                    {
-                        StartDownload();
-                    }
-                    else
-                    {
-                        mUI.StatusMessage = theError;
-                        mUI.InputEnabled = true;
-                    }
-
+                    theSite.TryParse( ref theArg.Url, ref mDownloadQueue, ref mUI, out theResult.Error );
                     return;
                 }
             }
 
-            if( aUrl.OriginalString.StartsWith( "http://" ) )
+            if( theArg.Url.OriginalString.StartsWith( "http://" ) )
             {
-                mUI.StatusMessage = "Connecting to " + aUrl.Host;
-
-                String theFilename = System.IO.Path.GetFileName( aUrl.OriginalString );
-                String theFileExt = System.IO.Path.GetExtension( aUrl.OriginalString );
+                String theFilename = System.IO.Path.GetFileName( theArg.Url.OriginalString );
+                String theFileExt = System.IO.Path.GetExtension( theArg.Url.OriginalString );
                 String theFilePath = FileUtils.SaveFile( theFilename, theFileExt + "|*" + theFileExt, mUI.Win32Window );
 
-                DownloadFile( aUrl, theFilePath );
+                DownloadTag theTag = new DownloadTag();
+                theTag.VideoUrl = theArg.Url;
+                theTag.DownloadDestination = theFilePath;
+
+                mDownloadQueue.Add( theTag );
             }
-            else if( mUI.SelectedConverter.IsValid &&
-                     !String.IsNullOrEmpty( aUrl.OriginalString ) &&
-                     System.IO.File.Exists( aUrl.OriginalString ) )
+        }
+
+        void mWorker_RunWorkerCompleted( object sender, RunWorkerCompletedEventArgs e )
+        {
+            WorkerResult theResult = (WorkerResult) e.Result;
+
+            if( String.IsNullOrEmpty( theResult.Error ) )
             {
-                ConvertFile( aUrl.OriginalString, aUrl.OriginalString );
+                if( mDownloadQueue.Count != 0 )
+                {
+                    StartDownload();
+                }
+                else
+                {
+                    mUI.ChangeLayout( Phase_t.eInitialized );
+                }
             }
             else
             {
+                mUI.ShowError( theResult.Error );
                 mUI.ChangeLayout( Phase_t.eInitialized );
             }
         }
