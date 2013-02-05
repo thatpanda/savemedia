@@ -33,13 +33,18 @@ namespace SaveMedia
 
         private long    mFileSize;
         private double  mFileSizeInMB;
-        private String  mFileSizeString;
-        private double  mBytesReceived;
+        private long    mBytesReceived;
+        private int     mDownloadPercentage;
 
         private double  mDuration;
 
         private int     mWaitingTime;
         private Timer   mDelayTimer;
+
+        private long    mBytesReceivedSinceLastSec;
+        private long    mBytesReceivedPerSec;
+        private String  mTimeRemaining;
+        private Timer   mDownloadSpeedTimer;
 
         private System.Collections.Generic.List< Sites.ISite > mSupportedSites;
         private System.Collections.Generic.List< DownloadTag > mDownloadQueue;
@@ -82,6 +87,10 @@ namespace SaveMedia
             mDelayTimer = new Timer();
             mDelayTimer.Interval = 1000;
             mDelayTimer.Tick += new EventHandler( mDelayTimer_Tick );
+
+            mDownloadSpeedTimer = new Timer();
+            mDownloadSpeedTimer.Interval = 1000;
+            mDownloadSpeedTimer.Tick += new EventHandler( mDownloadSpeedTimer_Tick );
 
             mSupportedSites = new List<Sites.ISite>();
             mSupportedSites.Add( new Sites.YouTube() );
@@ -159,8 +168,44 @@ namespace SaveMedia
             }
         }
 
+        private void mDownloadSpeedTimer_Tick( object sender, EventArgs e )
+        {
+            mBytesReceivedPerSec = ( mBytesReceived - mBytesReceivedSinceLastSec ) / ( mDownloadSpeedTimer.Interval / 1000 );
+
+            if( mBytesReceivedPerSec > 0 )
+            {
+                long theRemainingBytes = mFileSize - mBytesReceived;
+                long theRemainingSec = theRemainingBytes / mBytesReceivedPerSec;
+                long theRemainingMin = theRemainingSec / 60;
+
+                if( theRemainingMin > 1 )
+                {
+                    mTimeRemaining = String.Format( "{0} minutes remaining", theRemainingMin );
+                }
+                else if( theRemainingMin > 0 )
+                {
+                    mTimeRemaining = String.Format( "{0} minute remaining", theRemainingMin );
+                }
+                else
+                {
+                    mTimeRemaining = String.Format( "{0} seconds remaining", theRemainingSec );
+                }
+            }
+
+            mUI.StatusMessage = String.Format( "{0} - {1:0.00} of {2:0.00} MB ({3:0} KB/sec)",
+                                               mTimeRemaining,
+                                               mBytesReceived / gcOneMB,
+                                               mFileSizeInMB,
+                                               mBytesReceivedPerSec / gcOneKB );
+            mUI.DownloadProgress = mDownloadPercentage;
+
+            mBytesReceivedSinceLastSec = mBytesReceived;
+        }
+
         public void Abort()
         {
+            mDownloadSpeedTimer.Stop();
+
             if( mWaitingTime != 0 )
             {
                 mWaitingTime = 0;
@@ -415,30 +460,24 @@ namespace SaveMedia
             if( mFileSize == 0 )
             {
                 mFileSize = e.TotalBytesToReceive;
-                mFileSizeInMB = mFileSize;
+                mFileSizeInMB = System.Convert.ToDouble( mFileSize );
                 mFileSizeInMB /= gcOneMB;
-                mFileSizeString = mFileSizeInMB.ToString( "0.00" ) + " MB";
-                mUI.FileSize( mFileSizeString );
                 mBytesReceived = 0;
+                mBytesReceivedSinceLastSec = 0;
+                mBytesReceivedPerSec = 0;
+                mTimeRemaining = "? minutes remaining";
+
+                mDownloadSpeedTimer.Start();
             }
 
-            if( ( e.BytesReceived - mBytesReceived ) / ( 20 * gcOneKB ) >= 1 )
-            {
-                mBytesReceived = e.BytesReceived;
-
-                mUI.DownloadProgress = e.ProgressPercentage;
-
-                double theReceivedFileSizeInMB = e.BytesReceived;
-                theReceivedFileSizeInMB /= gcOneMB;
-                mUI.StatusMessage = "Downloading..." +
-                                    theReceivedFileSizeInMB.ToString( "0.00" ) +
-                                    "/" +
-                                    mFileSizeString;
-            }
+            mBytesReceived = e.BytesReceived;
+            mDownloadPercentage = e.ProgressPercentage;
         }
 
         private void DownloadCompleted( object sender, System.ComponentModel.AsyncCompletedEventArgs e )
         {
+            mDownloadSpeedTimer.Stop();
+
             if( e.Cancelled )
             {
                 mUI.ChangeLayout( Phase_t.eInitialized );
