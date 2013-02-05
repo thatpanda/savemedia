@@ -15,25 +15,6 @@ namespace Utility
 
         private static SaveMedia.IMainForm mMainForm;
 
-        public static void StartupCheckIfNeeded( SaveMedia.IMainForm aForm )
-        {
-            if( mAlreadyCheckedForUpdates )
-            {
-                return;
-            }
-
-            if( DateTime.Today == SaveMedia.Settings.LastTimeCheckedForUpdates() )
-            {
-                mAlreadyCheckedForUpdates = true;
-                return;
-            }
-
-            if( SaveMedia.Settings.CheckForUpdates().Equals( "auto", StringComparison.Ordinal ) )
-            {
-                CheckForUpdates( aForm );
-            } 
-        }
-
         public static void CheckForUpdatesIfNeeded( SaveMedia.IMainForm aForm )
         {
             if( mAlreadyCheckedForUpdates )
@@ -47,28 +28,11 @@ namespace Utility
                 return;
             }
 
-            switch( SaveMedia.Settings.CheckForUpdates() )
-            {
-                case "auto":
-                    CheckForUpdates( aForm );
-                    break;
-                case "when fails":
-                    CheckForUpdates( aForm );
-                    break;
-                case "never":
-                    return;
-                default:
-                    break;
-            }
+            CheckForUpdates( aForm );
         }
 
         public static void CheckForUpdates( SaveMedia.IMainForm aForm )
         {
-            if( mAlreadyCheckedForUpdates )
-            {
-                return;
-            }
-
             mMainForm = aForm;
 
             mAlreadyCheckedForUpdates = true;
@@ -121,17 +85,44 @@ namespace Utility
             String theLatestVersion = mSettings[ "Version" ];
             String theCurrentVersion = SaveMedia.Program.FileVersion;
 
-            if( theLatestVersion.Equals( theCurrentVersion, StringComparison.Ordinal ) )
+            if( IsNewerVersionAvailable( theCurrentVersion, theLatestVersion ) &&
+                mMainForm.PromptForUpdate() == DialogResult.Yes )
             {
-                return;
+                System.Diagnostics.Process.Start( "http://savemedia.googlecode.com/" );
+            }
+        }
+
+        private static bool IsNewerVersionAvailable( String aCurrentVersion, String aOtherVersion )
+        {
+            if( aCurrentVersion.Equals( aOtherVersion, StringComparison.Ordinal ) )
+            {
+                return false;
             }
 
-            if( mMainForm.PromptForUpdate() != DialogResult.Yes )
+            String[] theCurrentVersion = aCurrentVersion.Split( '.' );
+            String[] theOtherVersion = aOtherVersion.Split( '.' );
+
+            if( theCurrentVersion.Length != theOtherVersion.Length )
             {
-                return;
+                return true;
             }
 
-            System.Diagnostics.Process.Start( "http://savemedia.googlecode.com/" );
+            for( int theIndex = 0; theIndex < theCurrentVersion.Length; ++theIndex )
+            {
+                int theCurrent = System.Convert.ToInt32( theCurrentVersion[ theIndex ] );
+                int theOther = System.Convert.ToInt32( theOtherVersion[ theIndex ] );
+
+                if( theCurrent > theOther )
+                {
+                    return false;
+                }
+                else if( theCurrent < theOther  )
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void Load()

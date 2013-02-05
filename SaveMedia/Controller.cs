@@ -98,7 +98,7 @@ namespace SaveMedia
                                                   String.Empty ) );
             }
 
-            UpdateUtils.StartupCheckIfNeeded( mUI );
+            UpdateUtils.CheckForUpdatesIfNeeded( mUI );
         }
 
         public bool ConverterExists
