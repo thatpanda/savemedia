@@ -11,8 +11,8 @@ namespace SaveMedia
         public const String Company         = "";
         public const String Copyright       = "© 2013 Eric Choy";
         public const String AssemblyVersion = "1.0.0.0";
-        public const String FileVersion     = "1.7.8.0";
-        public const String TitleVersion    = "1.7.8";
+        public const String FileVersion     = "2.0.0.0";
+        public const String TitleVersion    = "2.0a";
         public const String UserAgent       = "Mozilla/5.0 (Windows NT 6.1; rv:18.0) Gecko/20100101 Firefox/18.0";
 
         /// <summary>
