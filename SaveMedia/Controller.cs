@@ -263,7 +263,7 @@ namespace SaveMedia
                 mUI.ChangeLayout( "Conversion failed" );
             }
         }
-
+        
         private void HandleStandardOutputData( object sendingProcess, System.Diagnostics.DataReceivedEventArgs outLine )
         {
             if( !String.IsNullOrEmpty( outLine.Data ) )
@@ -282,11 +282,14 @@ namespace SaveMedia
                 }
                 else
                 {
-                    String thePattern = "time=([\\d|.]+) ";
+                    String thePattern = "time=(\\d{2}):(\\d{2}):([\\d|.]+) ";
                     Match theMatch = Regex.Match( outLine.Data, thePattern );
-                    if( theMatch.Success && theMatch.Groups.Count == 2 )
+                    if( theMatch.Success && theMatch.Groups.Count == 4 )
                     {
-                        double theProgress = System.Convert.ToDouble( theMatch.Groups[ 1 ].ToString() );
+                        double theHours = System.Convert.ToDouble( theMatch.Groups[ 1 ].ToString() );
+                        double theMinutes = System.Convert.ToDouble( theMatch.Groups[ 2 ].ToString() );
+                        double theSeconds = System.Convert.ToDouble( theMatch.Groups[ 3 ].ToString() );
+                        double theProgress = theHours * 3600 + theMinutes * 60 + theSeconds;
                         int theConversionPercentage = (int) ( theProgress / mDuration * 100 );
                         theConversionPercentage = Math.Min( theConversionPercentage, 100 );
 
