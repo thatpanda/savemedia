@@ -1,5 +1,18 @@
 ﻿SaveMedia
-© 2012 Eric Choy
+© 2013 Eric Choy
+
+2013-02-05 	v2.0a
+==========
+~ NEW user interface!
+~ added download speed and remaining time
+~ improved UI responsiveness
+~ improved error handling for cases like the video was removed
+~ fixed random 403 forbidden error
+~ fixed random invalid URL error
+~ fixed error if preferred YouTube quality is not set to Standard
+~ fixed YouTube playlist support
+~ updated to the latest version of FFmpeg
+
 
 2012-09-17 	v1.7.7
 ==========
