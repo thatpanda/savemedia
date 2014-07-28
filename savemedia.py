@@ -15,13 +15,13 @@ import traceback
 import urllib2
 import urlparse
 
-from win32com.shell import shell, shellcon
 import wx
 
 from converter import Converter
 from downloader import Downloader
 import mainform
 import metadata
+from prefs import Prefs
 import pyperclip
 from youtubedl_proxy import YoutubeDlProxy
 
@@ -106,22 +106,6 @@ def _clipboard_url():
     return None
 
 
-def _desktop_dir():
-    return shell.SHGetFolderPath(0, shellcon.CSIDL_DESKTOPDIRECTORY, None, 0)
-
-
-def _document_dir():
-    sp = wx.StandardPaths.Get()
-    func = getattr(sp, u"GetDocumentsDir")
-    return func()
-
-
-def _default_download_dir():
-    if platform.system() == u"Windows":
-        return _desktop_dir()
-    return _document_dir()
-
-
 def _download_thumbnail(url, callback):
     info_dict = dict()
     if url:
@@ -196,10 +180,11 @@ def _preferred_encoding():
 
 def _prompt_to_save_file(parent, default_name, file_filter, callback):
         filename = _validate_filename(default_name)
+        prefs = Prefs()
         dialog = wx.FileDialog(
             parent,
             message=u"Save As",
-            defaultDir=_default_download_dir(),
+            defaultDir=prefs.download_dir,
             defaultFile=filename,
             wildcard=file_filter,
             style=wx.SAVE | wx.FD_OVERWRITE_PROMPT,
@@ -207,6 +192,8 @@ def _prompt_to_save_file(parent, default_name, file_filter, callback):
         destination = None
         if dialog.ShowModal() == wx.ID_OK:
             destination = dialog.GetPath()
+            prefs.download_dir = os.path.dirname(destination)
+            prefs.save()
             _g_logger.info(u"Save as: {0}".format(destination))
         dialog.Destroy()
         wx.CallAfter(callback, destination)
