@@ -6,7 +6,6 @@ import logging
 import logging.handlers
 import os
 import os.path
-import platform
 import re
 import StringIO
 import sys
@@ -16,14 +15,16 @@ import urllib2
 import urlparse
 
 import wx
+from youtube_dl import YoutubeDL
+from youtube_dl.utils import DownloadError
 
 from converter import Converter
+from datatag import DownloadTag
 from downloader import Downloader
 import mainform
 import metadata
 from prefs import Prefs
 import pyperclip
-from youtubedl_proxy import YoutubeDlProxy
 
 
 def _app_icon_path():
@@ -159,8 +160,28 @@ def _initialize_log():
 
 
 def _parse_url(url, callback):
-    proxy = YoutubeDlProxy(url)
-    wx.CallAfter(callback, proxy.download_tag)
+    download_tag = DownloadTag(url)
+
+    params = {"quiet": True,
+              "encoding": "utf8",
+              }
+    ydl = YoutubeDL(params)
+    ydl.add_default_info_extractors()
+
+    try:
+        info_dict = ydl.extract_info(url, download=False)
+    except DownloadError as e:
+        _g_logger.exception(e)
+        download_tag.error = u"Download Error"
+        if u"error 404" in e.message.lower():
+            download_tag.error = u"Error 404: Not Found"
+    else:
+        download_tag.ext = u"." + info_dict["ext"]
+        download_tag.title = info_dict["title"]
+        download_tag.thumbnail_url = info_dict["thumbnail"]
+        download_tag.video_url = info_dict["url"]
+
+    wx.CallAfter(callback, download_tag)
 
 
 def _preferred_encoding():
@@ -339,16 +360,15 @@ class Controller:
                 )
             )
 
-        title, file_ext = os.path.splitext(download_tag.filename)
-        self.view.set_main_label(title)
+        self.view.set_main_label(download_tag.title)
 
-        file_filter = u"(*{0})|*{0}".format(file_ext)
+        file_filter = u"*{0}|*{0}".format(download_tag.ext)
 
         thread.start_new_thread(
             _prompt_to_save_file,
             (
                 self.view,
-                title,
+                download_tag.title,
                 file_filter,
                 self._on_prompt_to_save_file_complete
             )

@@ -16,8 +16,9 @@ class ConversionTag:
 class DownloadTag:
     def __init__(self, url):
         self.error = False
-        self.filename = None
+        self.ext = None
         self.message = None
         self.source_url = url
+        self.title = None
         self.thumbnail_url = None
         self.video_url = None

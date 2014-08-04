@@ -10,7 +10,6 @@ build_exe_options = {
     "icon": metadata.icon,
     "include_files": [
         ("ffmpeg.exe", ""),
-        ("youtube-dl.exe", ""),
     ],
     "include_msvcr": True,
     "packages": ["os"],
