@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import logging
 
 import wx
-import wx.combo
+import wx.adv
 
 
 def _bitmap_for_file_ext(extension):
@@ -20,19 +20,30 @@ def _bitmap_for_file_ext(extension):
         return wx.NullBitmap
 
     icon, icon_file, icon_offset = icon_info
-    if icon.Ok():
-        return wx.BitmapFromIcon(icon)
+    if icon.IsOk():
+        bitmap = wx.Bitmap()
+        bitmap.CopyFromIcon(icon)
+        return bitmap
     return wx.NullBitmap
 
 
 def _image_combobox(parent, choices):
-    bcb = wx.combo.BitmapComboBox(
+    bcb = wx.adv.BitmapComboBox(
         parent, style=wx.CB_READONLY | wx.TE_PROCESS_ENTER)
     for choice in choices:
         bcb.Append(item=choice.name,
                    bitmap=choice.bitmap,
                    clientData=choice,
                    )
+
+    # Unlike Classic wxPython, the BitmapComboBox in wxPython Project Phoenix
+    # does not adjust its height based on the size of the Bitmap automatically
+    default_width = bcb.GetSize()[0]
+    bitmap_height = bcb.GetBitmapSize()[1]
+    margin = 3
+    height = margin + bitmap_height + margin
+    bcb.SetSize(default_width, height)
+
     return bcb
 
 
@@ -90,11 +101,11 @@ class MainForm(wx.Frame):
 
         self.url_textbox = wx.TextCtrl(self._input_panel,
                                        style=wx.TE_PROCESS_ENTER)
-        self.url_textbox.SetHint(u"Video URL")
+        self.url_textbox.SetHint("Video URL")
 
         self.conversion_combobox = _image_combobox(self._input_panel,
                                                    self._conversions)
-        if self.conversion_combobox.GetCount > 0:
+        if self.conversion_combobox.GetCount() > 0:
             self.conversion_combobox.SetSelection(0)
 
         input_sizer = wx.GridBagSizer()
@@ -110,9 +121,9 @@ class MainForm(wx.Frame):
         self.progress_panel.SetDoubleBuffered(True)
 
         self.video_thumbnail = wx.StaticBitmap(self.progress_panel,
-                                               bitmap=wx.NullBitmap)
+                                               label=wx.NullBitmap)
 
-        main_font = wx.SystemSettings_GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        main_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         main_font.SetPointSize(main_font.GetPointSize() + 2)
 
         self.main_label = wx.StaticText(self.progress_panel, label="")
@@ -143,7 +154,7 @@ class MainForm(wx.Frame):
         bottom_panel.SetBackgroundColour(
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_FRAMEBK))
 
-        self.option_button = wx.Button(bottom_panel, label=u"&Options...",
+        self.option_button = wx.Button(bottom_panel, label="&Options...",
                                        size=(80, 28))
         self.option_button.Hide()
 
@@ -152,7 +163,7 @@ class MainForm(wx.Frame):
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
 
         self.download_button = wx.Button(self.bottom_right_panel,
-                                         label=u"Download", size=(80, 28))
+                                         label="Download", size=(80, 28))
 
         self.cancel_button = wx.Button(self.bottom_right_panel, wx.ID_CANCEL,
                                        size=(80, 28))
@@ -194,7 +205,7 @@ class MainForm(wx.Frame):
         self.main_panel.SetSizerAndFit(self.main_sizer)
         self.main_sizer.SetSizeHints(self)
 
-    def error_dialog(self, message, title=u"Error"):
+    def error_dialog(self, message, title="Error"):
         _g_logger.error(message)
         dialog = wx.MessageDialog(self, message, title, wx.OK | wx.ICON_ERROR)
         dialog.ShowModal()
@@ -210,7 +221,7 @@ class MainForm(wx.Frame):
         self._update_layout()
 
     def set_progress(self, percentage, status):
-        self.SetTitle(u"{0}% - {1}".format(percentage, self._default_title))
+        self.SetTitle("{0}% - {1}".format(percentage, self._default_title))
         self.progress_label.SetLabelText(status)
         self.progressbar.SetValue(percentage)
 
@@ -236,7 +247,7 @@ class MainForm(wx.Frame):
         self._input_panel.Hide()
 
         self.video_thumbnail.Hide()
-        self.main_label.SetLabelText(u"Loading...")
+        self.main_label.SetLabelText("Loading...")
         self.progress_label.SetLabelText("")
         self.progressbar.Pulse()
         self.progress_panel.Show()

@@ -3,7 +3,7 @@
 import logging
 from time import time
 import threading
-import urllib2
+import urllib.error, urllib.parse, urllib.request
 
 import wx
 
@@ -67,7 +67,7 @@ class Downloader:
         self._previous_downloaded_bytes = self._downloaded_bytes
 
         self._KB_per_sec = self._bytes_per_sec / 1024
-        # _g_logger.debug(u"{0} KB/sec".format(self._KB_per_sec))
+        # _g_logger.debug("{0} KB/sec".format(self._KB_per_sec))
 
         if self._bytes_per_sec > 0:
             remaining_bytes = self._total_bytes - self._downloaded_bytes
@@ -75,13 +75,13 @@ class Downloader:
             remaining_minute = round(remaining_sec/60)
 
             if remaining_minute > 1:
-                self._remaining_time = u"{0:.0f} minutes remaining".format(
+                self._remaining_time = "{0:.0f} minutes remaining".format(
                     remaining_minute)
             elif remaining_minute > 0:
-                self._remaining_time = u"{0:.0f} minute remaining".format(
+                self._remaining_time = "{0:.0f} minute remaining".format(
                     remaining_minute)
             else:
-                self._remaining_time = u"{0:.0f} seconds remaining".format(
+                self._remaining_time = "{0:.0f} seconds remaining".format(
                     remaining_sec)
 
         if self._download_thread.isAlive():
@@ -99,23 +99,23 @@ class Downloader:
         start_time = time()
 
         try:
-            response = urllib2.urlopen(url)
-        except urllib2.HTTPError as e:
-            _g_logger.exception(u"Failed to access {0}".format(url))
-            message = u"Error: {0} - {1}".format(e.code, e.reason)
+            response = urllib.request.urlopen(url)
+        except urllib.error.HTTPError as e:
+            _g_logger.exception("Failed to access {0}".format(url))
+            message = "Error: {0} - {1}".format(e.code, e.reason)
             event = DownloadCompleteEvent(url, error=True, message=message)
             wx.CallAfter(self.complete_callback, event)
             return
-        except urllib2.URLError as e:
-            _g_logger.exception(u"Failed to access {0}".format(url))
-            message = u"Error: {0}".format(e.reason)
+        except urllib.error.URLError as e:
+            _g_logger.exception("Failed to access {0}".format(url))
+            message = "Error: {0}".format(e.reason)
             event = DownloadCompleteEvent(url, error=True, message=message)
             wx.CallAfter(self.complete_callback, event)
             return
         else:
             metadata = response.info()
-            
-        self._total_bytes = float(metadata.getheaders("Content-Length")[0])
+
+        self._total_bytes = float(metadata.get("Content-Length"))
         self._total_MB = self._total_bytes / 1024 / 1024
 
         if self.progress_callback:
@@ -123,7 +123,7 @@ class Downloader:
             self._downloaded_MB = 0.0
             self._KB_per_sec = 0.0
             self._previous_downloaded_bytes = 0.0
-            self._remaining_time = u"? minutes remaining"
+            self._remaining_time = "? minutes remaining"
 
             self._start_progress_timer()
             self._start_download_speed_timer()
@@ -153,12 +153,12 @@ class Downloader:
 
         end_time = time()
         elapsed_time = end_time - start_time
-        _g_logger.info(u"elapsed time: {0}".format(elapsed_time))
+        _g_logger.info("elapsed time: {0}".format(elapsed_time))
 
         if self._cancelled:
-            message = u"download cancelled"
+            message = "download cancelled"
         else:
-            message = u"{0:.2f} MB - download completed".format(self._total_MB)
+            message = "{0:.2f} MB - download completed".format(self._total_MB)
 
         _g_logger.info(message)
 
@@ -169,7 +169,7 @@ class Downloader:
 
     def _report_progress(self):
         # e.g. 1 minute remaining - 2.21 of 7.93 MB (64 KB/sec)
-        message = u"{0} - {1:.2f} of {2:.2f} MB ({3:.0f} KB/sec)".format(
+        message = "{0} - {1:.2f} of {2:.2f} MB ({3:.0f} KB/sec)".format(
             self._remaining_time,
             self._downloaded_MB,
             self._total_MB,

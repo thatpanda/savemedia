@@ -1,18 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import io
 import locale
 import logging
 import logging.handlers
 import os
 import os.path
 import re
-import StringIO
 import sys
-import thread
+import _thread
 import traceback
-import urllib2
-import urlparse
+import urllib.error, urllib.parse, urllib.request
 
 import wx
 from youtube_dl import YoutubeDL
@@ -68,13 +67,13 @@ def _bitmap_from_image(image, max_size=(None, None)):
     if oversized:
         image = image.Scale(width, height)
 
-    return wx.BitmapFromImage(image)
+    return wx.Bitmap(image)
 
 
 def _bitmap_from_string(string, max_size=(None, None)):
     """Create a wx.Bitmap from a string buffer"""
-    stream = StringIO.StringIO(string)
-    image = wx.ImageFromStream(stream)
+    stream = io.BytesIO(string)
+    image = wx.Image(stream)
     stream.close()
     return _bitmap_from_image(image, max_size)
 
@@ -101,7 +100,7 @@ def _clipboard_url():
     if not wx.TheClipboard.IsOpened():
         text = pyperclip.paste()
         if text:
-            parse_result = urlparse.urlparse(text)
+            parse_result = urllib.parse.urlparse(text)
             if parse_result.scheme and parse_result.netloc:
                 return text
     return None
@@ -111,12 +110,12 @@ def _download_thumbnail(url, callback):
     info_dict = dict()
     if url:
         try:
-            response = urllib2.urlopen(url)
-        except urllib2.HTTPError as e:
-            _g_logger.exception(u"Failed to access {0}".format(url))
+            response = urllib.request.urlopen(url)
+        except urllib.error.HTTPError as e:
+            _g_logger.exception("Failed to access {0}".format(url))
             info_dict["error"] = e
-        except urllib2.URLError as e:
-            _g_logger.exception(u"Failed to access {0}".format(url))
+        except urllib.error.URLError as e:
+            _g_logger.exception("Failed to access {0}".format(url))
             info_dict["error"] = e
         else:
             data = response.read()
@@ -126,8 +125,8 @@ def _download_thumbnail(url, callback):
 
 
 def _error_hook(error_type, value, tb):
-    message = u"".join(traceback.format_exception(error_type, value, tb))
-    dialog = wx.MessageDialog(None, message, u"Error", wx.OK | wx.ICON_ERROR)
+    message = "".join(traceback.format_exception(error_type, value, tb))
+    dialog = wx.MessageDialog(None, message, "Error", wx.OK | wx.ICON_ERROR)
     dialog.ShowModal()
     dialog.Destroy()
     sys.exit(message)
@@ -136,21 +135,21 @@ def _error_hook(error_type, value, tb):
 def _initialize_log():
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
-    formatter = logging.Formatter(u"%(name)-12s [%(levelname)s] %(message)s")
+    formatter = logging.Formatter("%(name)-12s [%(levelname)s] %(message)s")
     console_handler.setFormatter(formatter)
 
-    file_path = u"log.txt"
+    file_path = "log.txt"
     log_dir = os.path.dirname(file_path)
     if log_dir and not os.path.isdir(log_dir):
         os.mkdir(os.path.dirname(file_path))
-    print(u"Log file: {0}".format(os.path.abspath(file_path))
+    print("Log file: {0}".format(os.path.abspath(file_path))
           .encode(_preferred_encoding(), 'ignore'))
 
     file_handler = logging.handlers.TimedRotatingFileHandler(
         file_path, when="midnight", encoding="utf8")
     file_handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        u"%(asctime)s - %(name)s [%(levelname)s] %(message)s")
+        "%(asctime)s - %(name)s [%(levelname)s] %(message)s")
     file_handler.setFormatter(formatter)
 
     logger = logging.getLogger()
@@ -172,11 +171,11 @@ def _parse_url(url, callback):
         info_dict = ydl.extract_info(url, download=False)
     except DownloadError as e:
         _g_logger.exception(e)
-        download_tag.error = u"Download Error"
-        if u"error 404" in e.message.lower():
-            download_tag.error = u"Error 404: Not Found"
+        download_tag.error = "Download Error"
+        if "error 404" in e.message.lower():
+            download_tag.error = "Error 404: Not Found"
     else:
-        download_tag.ext = u"." + info_dict["ext"]
+        download_tag.ext = "." + info_dict["ext"]
         download_tag.title = info_dict["title"]
         download_tag.thumbnail_url = info_dict["thumbnail"]
         download_tag.video_url = info_dict["url"]
@@ -193,7 +192,7 @@ def _preferred_encoding():
     """
     try:
         pref = locale.getpreferredencoding()
-        u'TEST'.encode(pref)
+        'TEST'.encode(pref)
     except UnicodeError:
         pref = 'UTF-8'
     return pref
@@ -204,18 +203,18 @@ def _prompt_to_save_file(parent, default_name, file_filter, callback):
         prefs = Prefs()
         dialog = wx.FileDialog(
             parent,
-            message=u"Save As",
+            message="Save As",
             defaultDir=prefs.download_dir,
             defaultFile=filename,
             wildcard=file_filter,
-            style=wx.SAVE | wx.FD_OVERWRITE_PROMPT,
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
         )
         destination = None
         if dialog.ShowModal() == wx.ID_OK:
             destination = dialog.GetPath()
             prefs.download_dir = os.path.dirname(destination)
             prefs.save()
-            _g_logger.info(u"Save as: {0}".format(destination))
+            _g_logger.info("Save as: {0}".format(destination))
         dialog.Destroy()
         wx.CallAfter(callback, destination)
 
@@ -225,7 +224,7 @@ def _validate_filename(filename):
     filename = re.sub(r"[\\/:*?<>|]", "", filename)
     filename = filename.replace('"', "'")
     if not filename:
-        filename = u"Untitled"
+        filename = "Untitled"
     return filename
 
 
@@ -291,7 +290,7 @@ class Controller:
             self.view.show_input_layout()
             return
 
-        thread.start_new_thread(
+        _thread.start_new_thread(
             _parse_url, (url, self._on_parse_url_complete))
 
     def _on_form_close(self, event):
@@ -338,7 +337,8 @@ class Controller:
     def _on_download_thumbnail_complete(self, info_dict):
         if "data" in info_dict:
             bitmap = info_dict["data"]
-            self.view.set_thumbnail(bitmap)
+            if bitmap:
+                self.view.set_thumbnail(bitmap)
 
     def _on_download_progress_change(self, event):
         self.view.set_progress(event.percentage, event.message)
@@ -352,7 +352,7 @@ class Controller:
             return
 
         if download_tag.thumbnail_url:
-            thread.start_new_thread(
+            _thread.start_new_thread(
                 _download_thumbnail,
                 (
                     download_tag.thumbnail_url,
@@ -362,9 +362,9 @@ class Controller:
 
         self.view.set_main_label(download_tag.title)
 
-        file_filter = u"*{0}|*{0}".format(download_tag.ext)
+        file_filter = "*{0}|*{0}".format(download_tag.ext)
 
-        thread.start_new_thread(
+        _thread.start_new_thread(
             _prompt_to_save_file,
             (
                 self.view,
@@ -395,8 +395,6 @@ _g_logger = logging.getLogger(__name__)
 
 if __name__ == '__main__':
     sys.excepthook = _error_hook
-
-    import sys
     sys.stderr = open("error.log", "w")
 
     app = wx.App()

@@ -28,7 +28,7 @@ def _has_unsupported_character(path):
 
 
 def _run_ffmpeg(*args):
-    cmd = [u"ffmpeg.exe"]
+    cmd = ["ffmpeg.exe"]
     cmd.extend(args)
     si = subprocess.STARTUPINFO()
     si.dwFlags = subprocess.STARTF_USESHOWWINDOW
@@ -115,25 +115,25 @@ class Converter:
         """Return a list of available conversions"""
         conversions = [
             ConversionTag(
-                u"Do not convert file",
-                display_ext=u".mp4"
+                "Do not convert file",
+                display_ext=".mp4"
             ),
             ConversionTag(
-                u"MPEG-1 Audio Layer 3 (*.mp3)",
-                u".mp3",
-                u"-y -i {0} -ar 44100 -ab 192k -ac 2 {1}"
+                "MPEG-1 Audio Layer 3 (*.mp3)",
+                ".mp3",
+                "-y -i {0} -ar 44100 -ab 192k -ac 2 {1}"
             ),
             ConversionTag(
-                u"Windows Media Video (*.wmv)",
-                u".wmv",
-                u"-y -i {0} -vcodec wmv2 -sameq -acodec mp2 -ar 44100 -ab 192k -f avi {1}"
+                "Windows Media Video (*.wmv)",
+                ".wmv",
+                "-y -i {0} -vcodec wmv2 -sameq -acodec mp2 -ar 44100 -ab 192k -f avi {1}"
             )
         ]
         return conversions
 
     def _parse_ffmpeg_output(self):
         duration = 0
-        message = u"Converting..."
+        message = "Converting..."
         output = []
         while self._ffmpeg.returncode is None:
             if self.progress_callback and self._ffmpeg.stdout:
@@ -179,7 +179,7 @@ class Converter:
         try:
             os.remove(self._temp_source)
         except WindowsError:
-            _g_logger.exception(u"Unable to remove temp_source")
+            _g_logger.exception("Unable to remove temp_source")
 
         if os.path.isfile(self._destination):
             os.remove(self._destination)
@@ -193,9 +193,9 @@ class Converter:
 
 
         if self._cancelled:
-            message = u"conversion cancelled"
+            message = "conversion cancelled"
         else:
-            message = u"conversion completed"
+            message = "conversion completed"
 
         _g_logger.info(message)
 
@@ -212,7 +212,7 @@ if __name__ == "__main__":
     import logging.handlers
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(u"%(name)-12s [%(levelname)s] %(message)s")
+    formatter = logging.Formatter("%(name)-12s [%(levelname)s] %(message)s")
     console_handler.setFormatter(formatter)
 
     logger = logging.getLogger()
