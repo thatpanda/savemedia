@@ -90,6 +90,8 @@ class MainForm(wx.Frame):
         self._initialize_ui()
         self.Centre()
 
+        self.url_textbox.SetFocus()
+
     def _initialize_ui(self):
         self.main_panel = wx.Panel(self)
         self.main_panel.SetBackgroundColour(
@@ -240,6 +242,8 @@ class MainForm(wx.Frame):
         self.cancel_button.Hide()
         self.ok_button.Hide()
 
+        self._input_panel.SetFocus()
+
         self.main_sizer.Layout()
         self.main_sizer.SetSizeHints(self)
 
@@ -254,6 +258,8 @@ class MainForm(wx.Frame):
 
         self.download_button.Hide()
         self.cancel_button.Show()
+
+        self.cancel_button.SetFocus()
 
         self._update_layout()
 
