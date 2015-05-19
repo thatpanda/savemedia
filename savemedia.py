@@ -153,24 +153,27 @@ def _initialize_log():
     formatter = logging.Formatter("%(name)-12s [%(levelname)s] %(message)s")
     console_handler.setFormatter(formatter)
 
-    file_path = "log.txt"
-    log_dir = os.path.dirname(file_path)
-    if log_dir and not os.path.isdir(log_dir):
-        os.mkdir(os.path.dirname(file_path))
-    print("Log file: {0}".format(os.path.abspath(file_path))
-          .encode(_preferred_encoding(), 'ignore'))
-
-    file_handler = logging.handlers.TimedRotatingFileHandler(
-        file_path, when="midnight", encoding="utf8")
-    file_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s [%(levelname)s] %(message)s")
-    file_handler.setFormatter(formatter)
-
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     logger.addHandler(console_handler)
-    logger.addHandler(file_handler)
+
+    enable_log_file = False
+    if enable_log_file:
+        file_path = "log.txt"
+        log_dir = os.path.dirname(file_path)
+        if log_dir and not os.path.isdir(log_dir):
+            os.mkdir(os.path.dirname(file_path))
+        print("Log file: {0}".format(os.path.abspath(file_path))
+              .encode(_preferred_encoding(), 'ignore'))
+
+        file_handler = logging.handlers.TimedRotatingFileHandler(
+            file_path, when="midnight", encoding="utf8")
+        file_handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s [%(levelname)s] %(message)s")
+        file_handler.setFormatter(formatter)
+
+        logger.addHandler(file_handler)
 
 
 def _parse_url(url, callback):
