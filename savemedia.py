@@ -1,6 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+
+def import_wx():
+    # wx currently do not support py3k, so in core.py:22 it raises:
+    # UserWarning: wxPython/wxWidgets release number mismatch
+    #
+    # In warnings.py:15, it makes use of stderr which raises:
+    # AttributeError: 'NoneType' object has no attribute 'write'
+    #
+    # Initialize stderr prior importing wx to avoid the issue
+    import sys
+    sys.stderr = open("error.txt", "w")
+    global wx
+    import wx
+
+
 import io
 import locale
 import logging
@@ -13,7 +28,7 @@ import _thread
 import traceback
 import urllib.error, urllib.parse, urllib.request
 
-import wx
+import_wx()
 from youtube_dl import YoutubeDL
 from youtube_dl.utils import DownloadError
 
@@ -395,7 +410,7 @@ _g_logger = logging.getLogger(__name__)
 
 if __name__ == '__main__':
     sys.excepthook = _error_hook
-    sys.stderr = open("error.log", "w")
+    sys.stderr = open("error.txt", "a")
 
     app = wx.App()
     Controller()
