@@ -112,12 +112,12 @@ def _bitmap_from_string(string, max_size=(None, None)):
 #     return None
 #
 def _clipboard_url():
-    if not wx.TheClipboard.IsOpened():
-        text = pyperclip.paste()
-        if text:
-            parse_result = urllib.parse.urlparse(text)
-            if parse_result.scheme and parse_result.netloc:
-                return text
+    text = pyperclip.paste()
+    if not text:
+        return None
+    parse_result = urllib.parse.urlparse(text)
+    if parse_result.scheme and parse_result.netloc:
+        return text
     return None
 
 
@@ -275,6 +275,8 @@ class Controller:
         self.view.Bind(wx.EVT_ACTIVATE, self._on_set_focus)
         self.view.Bind(wx.EVT_CLOSE, self._on_form_close)
 
+        self._auto_fill_url()
+
         self.view.Show()
 
         _initialize_log()
@@ -318,15 +320,17 @@ class Controller:
 
     def _on_ok_click(self, event):
         self.view.show_input_layout()
+        self._auto_fill_url()
 
     def _on_option_click(self, event):
         pass
 
     def _on_set_focus(self, e):
-        if e.GetActive():
-            url = _clipboard_url()
-            if url:
-                self.view.set_input_text(url)
+        if not e.GetActive():
+            return
+        if not self.view.url_textbox.IsShownOnScreen():
+            return
+        self._auto_fill_url()
 
     def _on_url_enter_press(self, e):
         self._on_download_click(e)
@@ -402,6 +406,16 @@ class Controller:
 
     # private functions
     #======================================================================
+    def _auto_fill_url(self):
+        url = _clipboard_url()
+        if not url:
+            return
+        if self.view.url_textbox.GetValue() == url:
+            return
+        self.view.set_input_text(url)
+        self.view.url_textbox.SetFocus()
+        self.view.url_textbox.SetInsertionPointEnd()
+
     def _notify_user(self, message):
         self.view.show_confirmation_layout(message)
         if not self.view.IsActive():
