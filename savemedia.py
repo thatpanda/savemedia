@@ -179,8 +179,9 @@ def _initialize_log():
 def _parse_url(url, callback):
     download_tag = DownloadTag(url)
 
-    params = {"quiet": True,
-              "encoding": "utf8",
+    params = {"encoding": "utf8",
+              "format": "best",
+              "quiet": True,
               }
     ydl = YoutubeDL(params)
     ydl.add_default_info_extractors()
