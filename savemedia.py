@@ -217,7 +217,7 @@ def _preferred_encoding():
     return pref
 
 
-def _prompt_to_save_file(parent, default_name, file_filter, callback):
+def _prompt_to_save_file(parent, default_name, file_filter):
         filename = _validate_filename(default_name)
         prefs = Prefs()
         dialog = wx.FileDialog(
@@ -235,7 +235,7 @@ def _prompt_to_save_file(parent, default_name, file_filter, callback):
             prefs.save()
             _g_logger.info("Save as: {0}".format(destination))
         dialog.Destroy()
-        wx.CallAfter(callback, destination)
+        return destination
 
 
 def _validate_filename(filename):
@@ -387,17 +387,9 @@ class Controller:
 
         file_filter = "*{0}|*{0}".format(download_tag.ext)
 
-        _thread.start_new_thread(
-            _prompt_to_save_file,
-            (
-                self.view,
-                download_tag.title,
-                file_filter,
-                self._on_prompt_to_save_file_complete
-            )
-        )
-
-    def _on_prompt_to_save_file_complete(self, destination):
+        destination = _prompt_to_save_file(self.view,
+                                           download_tag.title,
+                                           file_filter)
         if not destination:
             self.view.show_input_layout()
             return
