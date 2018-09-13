@@ -15,10 +15,9 @@ Powered by open-source libraries: [youtube-dl](https://github.com/rg3/youtube-dl
 
 # News
 
-[2015-05-19] released savemedia v3.0a
+[2018-09-12] released savemedia v3.1
 
- * initial implementation in Python (no longer requires .NET framework)
- * moved hosting from Google Code to GitHub
+ * updated to cx-Freeze 5.1.1, wxPython 4.0.4a1 and youtube-dl 2018.9.10
 
 # Download
 
