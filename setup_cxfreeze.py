@@ -1,20 +1,10 @@
+# https://cx-freeze.readthedocs.io/en/latest/distutils.html
+
 import sys
 from cx_Freeze import setup, Executable
 
 import metadata
 
-# Dependencies are automatically detected, but it might need fine tuning.
-build_exe_options = {
-    "append_script_to_exe": True,
-    "create_shared_zip": False,
-    "icon": metadata.icon,
-    "include_files": [
-        ("ffmpeg.exe", ""),
-    ],
-    "include_msvcr": True,
-    "packages": ["os"],
-    "excludes": ["tkinter"]
-}
 
 # GUI applications require a different base on Windows (the default is for a
 # console application).
@@ -27,12 +17,22 @@ setup(
     version=metadata.version,
     description=metadata.description,
     options={
-        "build_exe": build_exe_options
+        "build_exe": {
+            "include_files": [
+                ("ffmpeg.exe", ""),
+            ],
+            "include_msvcr": True,
+            "packages": ["os"],
+            "excludes": ["tkinter"],
+            "zip_include_packages": "*",
+            "zip_exclude_packages": ""
+        }
     },
     executables=[
         Executable(
             "savemedia.py",
             base=base,
+            icon=metadata.icon,
         )
     ]
 )
