@@ -123,7 +123,7 @@ class MainForm(wx.Frame):
         self.progress_panel.SetDoubleBuffered(True)
 
         self.video_thumbnail = wx.StaticBitmap(self.progress_panel,
-                                               label=wx.NullBitmap)
+                                               bitmap=wx.NullBitmap)
 
         main_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         main_font.SetPointSize(main_font.GetPointSize() + 2)
