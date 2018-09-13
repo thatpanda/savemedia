@@ -28,6 +28,7 @@ import _thread
 import traceback
 import urllib.error, urllib.parse, urllib.request
 
+import pyperclip
 import_wx()
 from youtube_dl import YoutubeDL
 from youtube_dl.utils import DownloadError
@@ -38,7 +39,6 @@ from downloader import Downloader
 import mainform
 import metadata
 from prefs import Prefs
-import pyperclip
 
 
 def _app_icon_path():

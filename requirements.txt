@@ -1,0 +1,6 @@
+cx-Freeze==5.1.1
+Pillow==5.2.0
+pyperclip==1.6.4
+six==1.11.0
+wxPython==4.0.4a1.dev3940+1b119f6a
+youtube-dl==2018.9.10
