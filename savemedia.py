@@ -190,9 +190,7 @@ def _parse_url(url, callback):
         info_dict = ydl.extract_info(url, download=False)
     except DownloadError as e:
         _g_logger.exception(e)
-        download_tag.error = "Download Error"
-        if "error 404" in e.message.lower():
-            download_tag.error = "Error 404: Not Found"
+        download_tag.error = "Download Error. See error.txt for details"
     else:
         download_tag.ext = "." + info_dict["ext"]
         download_tag.title = info_dict["title"]
